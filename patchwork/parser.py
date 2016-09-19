@@ -21,7 +21,7 @@
 
 import codecs
 import datetime
-from email.header import Header, decode_header
+from email.header import decode_header, make_header
 from email.utils import parsedate_tz, mktime_tz
 from fnmatch import fnmatch
 from functools import reduce
@@ -155,10 +155,64 @@ def find_date(mail):
 
 
 def find_headers(mail):
-    return reduce(operator.__concat__,
-                  ['%s: %s\n' % (k, Header(v, header_name=k,
-                                           continuation_ws='\t').encode())
-                   for (k, v) in list(mail.items())])
+    # We have some Py2/Py3 issues here.
+    #
+    # Firstly, the email parser (before we get here)
+    # Python 3: headers with weird chars are email.header.Header
+    #           class, others as str
+    # Python 2: every header is an str
+    #
+    # Secondly, the behaviour of decode_header:
+    # Python 3: weird headers are labelled as unknown-8bit
+    # Python 2: weird headers are not labelled differently, causing an
+    #           encoding issue when Py2 goes to then encode it in
+    #           make_header.
+    #
+    # Lastly, making matters worse, in Python2, unknown-8bit doesn't
+    # seem to be supported as an input to make_header, so not only do
+    # we have to detect dodgy headers, we have to fix them ourselves.
+    #
+    # We solve this by catching any Unicode errors, and then manually
+    # handling any interesting headers. This will only happen under
+    # Py2.
+
+    headers = {key: decode_header(value) for key, value in
+               mail.items()}
+
+    strings = []
+    for key, value in headers.items():
+        try:
+            header = make_header(value,
+                                 header_name=key,
+                                 continuation_ws='\t')
+        except UnicodeDecodeError:
+            # We should only get here under Python 2.
+            # At least one of the parts cannot be encoded as ascii.
+            # Find out which one and fix it somehow.
+            new_value=[]
+            for (part, coding) in value:
+                if (coding is not None or
+                    all([ord(x) in range(128) for x in part])):
+
+                    # we either have a coding hint or it's all ascii
+                    # let it through unchanged.
+                    new_value += [(part, coding)]
+                else:
+                    # We have random bytes that aren't properly coded.
+                    # We should do the unknown-8bit coding ourselves.
+                    # For now, we're just going to replace any dubious
+                    # chars with ?. TODO: replace it with a proper QP
+                    # unknown-8bit codec.
+                    new_value += [(part.decode('ascii', errors='replace')
+                                   .encode('ascii', errors='replace'),
+                                   None)]
+            header = make_header(new_value,
+                                 header_name=key,
+                                 continuation_ws='\t')
+        finally:
+            strings += ['%s: %s' % (key, header.encode())]
+
+    return '\n'.join(strings)
 
 
 def find_references(mail):
