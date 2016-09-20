@@ -22,8 +22,15 @@
 BIN_DIR=`dirname $0`
 PATCHWORK_BASE=`readlink -e $BIN_DIR/../..`
 
+if [ -z $PW_PYTHON ]; then
+	PW_PYTHON=python2
+fi
+
+if [ -z $DJANGO_SETTINGS_MODULE ]; then
+	export DJANGO_SETTINGS_MODULE=patchwork.settings.production
+fi
+
 PYTHONPATH="$PATCHWORK_BASE":"$PATCHWORK_BASE/lib/python:$PYTHONPATH" \
-        DJANGO_SETTINGS_MODULE=patchwork.settings.production \
-        "$PATCHWORK_BASE/patchwork/bin/parsemail.py"
+        $PW_PYTHON "$PATCHWORK_BASE/patchwork/bin/parsemail.py" $@
 
 exit 0
