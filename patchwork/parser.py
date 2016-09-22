@@ -42,7 +42,7 @@ _hunk_re = re.compile(r'^\@\@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? \@\@')
 _filename_re = re.compile(r'^(---|\+\+\+) (\S+)')
 list_id_headers = ['List-ID', 'X-Mailing-List', 'X-list']
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def normalise_space(str):
@@ -653,7 +653,7 @@ def parse_mail(mail, list_id=None):
 
     hint = mail.get('X-Patchwork-Hint', '').lower()
     if hint == 'ignore':
-        LOGGER.debug("Ignoring email due to 'ignore' hint")
+        logger.debug("Ignoring email due to 'ignore' hint")
         return
 
     if list_id:
@@ -662,7 +662,7 @@ def parse_mail(mail, list_id=None):
         project = find_project_by_header(mail)
 
     if project is None:
-        LOGGER.error('Failed to find a project for email')
+        logger.error('Failed to find a project for email')
         return
 
     # parse content
@@ -705,7 +705,7 @@ def parse_mail(mail, list_id=None):
             delegate=delegate,
             state=find_state(mail))
         patch.save()
-        LOGGER.debug('Patch saved')
+        logger.debug('Patch saved')
 
         return patch
     elif x == 0:  # (potential) cover letters
@@ -737,7 +737,7 @@ def parse_mail(mail, list_id=None):
                 submitter=author,
                 content=message)
             cover_letter.save()
-            LOGGER.debug('Cover letter saved')
+            logger.debug('Cover letter saved')
 
             return cover_letter
 
@@ -758,7 +758,7 @@ def parse_mail(mail, list_id=None):
         submitter=author,
         content=message)
     comment.save()
-    LOGGER.debug('Comment saved')
+    logger.debug('Comment saved')
 
     return comment
 
