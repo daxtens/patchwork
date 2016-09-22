@@ -81,3 +81,32 @@ class ParsemailTest(TestCase):
 
         count = models.Patch.objects.filter(project=project.id).count()
         self.assertEqual(count, 1)
+
+    def test_utf8_path(self):
+        project = utils.create_project()
+        utils.create_state()
+
+        path = os.path.join(TEST_MAIL_DIR, '0013-with-utf8-body.mbox')
+        with self.assertRaises(SystemExit) as exc:
+            call_command('parsemail', infile=path, list_id=project.listid)
+
+        self.assertEqual(exc.exception.code, 0)
+
+        count = models.Patch.objects.filter(project=project.id).count()
+        self.assertEqual(count, 1)
+
+    def test_utf8_stdin(self):
+        project = utils.create_project()
+        utils.create_state()
+
+        path = os.path.join(TEST_MAIL_DIR, '0013-with-utf8-body.mbox')
+        sys.stdin.close()
+        sys.stdin = open(path)
+        with self.assertRaises(SystemExit) as exc:
+            call_command('parsemail', infile=None,
+                         list_id=project.listid)
+
+        self.assertEqual(exc.exception.code, 0)
+
+        count = models.Patch.objects.filter(project=project.id).count()
+        self.assertEqual(count, 1)
