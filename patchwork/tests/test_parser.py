@@ -537,6 +537,96 @@ class PatchParseTest(PatchTest):
         self.assertEqual(2, diff.count('\ No newline at end of file'))
 
 
+class HeaderTest(TestCase):
+    def test_header_preservation(self):
+        """Verify that header refactoring doesn't interfere with parsing."""
+        project = create_project()
+        mail = read_mail('0001-git-pull-request.mbox')
+        parse_mail(mail, list_id=project.listid)
+        headers = """Return-Path: <linuxppc-dev-bounces+jk=ozlabs.org@lists.ozlabs.org>
+X-Spam-Checker-Version: SpamAssassin 3.3.1 (2010-03-16) on bilbo.ozlabs.org
+X-Spam-Level: 
+X-Spam-Status: No, score=0.0 required=3.0 tests=none autolearn=disabled
+	version=3.3.1
+X-Original-To: jk@ozlabs.org
+Delivered-To: jk@ozlabs.org
+Received: from bilbo.ozlabs.org (localhost [127.0.0.1])
+	by ozlabs.org (Postfix) with ESMTP id ED4B3100937
+	for <jk@ozlabs.org>; Fri, 22 Oct 2010 14:51:54 +1100 (EST)
+Received: by ozlabs.org (Postfix)
+	id BF799B70CB; Fri, 22 Oct 2010 14:51:50 +1100 (EST)
+Delivered-To: linuxppc-dev@ozlabs.org
+Received: from gate.crashing.org (gate.crashing.org [63.228.1.57])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by ozlabs.org (Postfix) with ESMTPS id 94629B7043
+	for <linuxppc-dev@ozlabs.org>; Fri, 22 Oct 2010 14:51:49 +1100 (EST)
+Received: from [IPv6:::1] (localhost.localdomain [127.0.0.1])
+	by gate.crashing.org (8.14.1/8.13.8) with ESMTP id o9M3p3SP018234;
+	Thu, 21 Oct 2010 22:51:04 -0500
+Subject: [git pull] Please pull powerpc.git next branch
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Fri, 22 Oct 2010 14:51:02 +1100
+Message-ID: <1287719462.2198.37.camel@pasglop>
+Mime-Version: 1.0
+X-Mailer: Evolution 2.30.3 
+"""
+        # Ergh.
+        #
+        # The original mail used a single space for the continuation
+        # line of Cc:. Python2 normalises this to \t (we specify that
+        # as the whitespace continuation character.) Python3 does not
+        # normalise it.
+        #
+        # It doesn't seem to have any semantic meaning, and it's not
+        # clear what the 'correct' behaviour is. But the change does
+        # cause the tests to fail.
+        #
+        # We don't want to rewrite chunks of the email module to get
+        # things to be consistent. So just special case it...
+        if six.PY3:
+            headers += """Cc: linuxppc-dev list <linuxppc-dev@ozlabs.org>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Linux Kernel list <linux-kernel@vger.kernel.org>
+"""
+        else:
+            headers += """Cc: linuxppc-dev list <linuxppc-dev@ozlabs.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linux Kernel list <linux-kernel@vger.kernel.org>
+"""
+
+        headers += """X-BeenThere: linuxppc-dev@lists.ozlabs.org
+X-Mailman-Version: 2.1.13
+Precedence: list
+List-Id: Linux on PowerPC Developers Mail List <cbe-oss-dev.ozlabs.org>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Sender: linuxppc-dev-bounces+jk=ozlabs.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+jk=ozlabs.org@lists.ozlabs.org
+X-UID: 11446
+X-Length: 16781
+Status: R
+X-Status: N
+X-KMail-EncryptionState: 
+X-KMail-SignatureState: 
+X-KMail-MDN-Sent: 
+"""
+        # We also strip the newlines: it doesn't really matter if we
+        # end with a trailing newline or not. (It means we can have a
+        # slightly simpler parser!)
+        self.assertEqual(Patch.objects.first().headers.strip('\n'),
+                         headers.strip('\n'))
+
+
 class DelegateRequestTest(TestCase):
 
     patch_filename = '0001-add-line.patch'
