@@ -34,6 +34,7 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 
 from patchwork.compat import is_authenticated
+from patchwork.compat import reverse
 from patchwork.fields import HashField
 from patchwork.hasher import hash_diff
 
@@ -548,13 +549,11 @@ class Patch(SeriesMixin, Submission):
 
         return counts
 
-    @models.permalink
     def get_absolute_url(self):
-        return ('patch-detail', (), {'patch_id': self.id})
+        return reverse('patch-detail', kwargs={'patch_id': self.id})
 
-    @models.permalink
     def get_mbox_url(self):
-        return ('patch-mbox', (), {'patch_id': self.id})
+        return reverse('patch-mbox', kwargs={'patch_id': self.id})
 
     def __str__(self):
         return self.name
@@ -776,17 +775,17 @@ class Bundle(models.Model):
         return BundlePatch.objects.create(bundle=self, patch=patch,
                                           order=max_order + 1)
 
-    @models.permalink
     def get_absolute_url(self):
-        return ('bundle-detail', (), {
+        return reverse('bundle-detail', kwargs={
             'username': self.owner.username,
             'bundlename': self.name,
         })
 
-    @models.permalink
     def get_mbox_url(self):
-        return ('bundle-mbox', (), {'bundlename': self.name,
-                                    'username': self.owner.username})
+        return reverse('bundle-mbox', kwargs={
+            'bundlename': self.name,
+            'username': self.owner.username
+        })
 
     class Meta:
         unique_together = [('owner', 'name')]
