@@ -344,10 +344,33 @@ def find_date(mail):
     h = clean_header(mail.get('Date', ''))
     if not h:
         return datetime.datetime.utcnow()
+
     t = parsedate_tz(h)
     if not t:
         return datetime.datetime.utcnow()
-    return datetime.datetime.utcfromtimestamp(mktime_tz(t))
+
+    try:
+        d = datetime.datetime.utcfromtimestamp(mktime_tz(t))
+    except OverflowError:
+        # If you have a date like:
+        # Date: Wed, 4 Jun 207777777777777777777714 17:50:46 0
+        # then you can end up with:
+        # OverflowError: Python int too large to convert to C long
+        d = datetime.datetime.utcnow()
+    except ValueError:
+        # If you have a date like:
+        # Date:, 11 Sep 2016 23:22:904070804030804 +0100
+        # then you can end up with:
+        # ValueError: year is out of range
+        d = datetime.datetime.utcnow()
+    except OSError:
+        # If you have a date like:
+        # Date:, 11 Sep 2016 407080403080105:04 +0100
+        # then you can end up with (in py3)
+        # OSError: [Errno 75] Value too large for defined data type
+        d = datetime.datetime.utcnow()
+
+    return d
 
 
 def find_headers(mail):
