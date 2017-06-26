@@ -77,6 +77,15 @@ class Command(BaseCommand):
 
         count = len(mbox)
 
+        # detect broken mails in the mbox
+        # see earlyfail fuzz test on py3
+        try:
+            for m in mbox:
+                pass
+        except AttributeError:
+            logger.warning('Broken mbox/Maildir, aborting')
+            return
+
         logger.info('Parsing %d mails', count)
         for i, msg in enumerate(mbox):
             try:
