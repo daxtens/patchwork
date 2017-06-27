@@ -48,6 +48,8 @@ RUN cat /tmp/bashrc >> /home/patchwork/.bashrc
 
 COPY tools/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 
+RUN apt-get install -y cython cython3; pip3 install python-afl; pip install python-afl
+
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 USER patchwork
 WORKDIR /home/patchwork/patchwork

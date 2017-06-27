@@ -43,6 +43,7 @@ from patchwork.parser import parse_series_marker
 from patchwork.parser import parse_version
 from patchwork.parser import split_prefixes
 from patchwork.parser import subject_check
+from patchwork.parser import BrokenEmailException
 from patchwork.tests import TEST_MAIL_DIR
 from patchwork.tests import TEST_FUZZ_DIR
 from patchwork.tests.utils import create_project
@@ -236,7 +237,7 @@ class SenderEncodingTest(TestCase):
 
     def test_empty(self):
         email = self._create_email('')
-        with self.assertRaises(ValueError):
+        with self.assertRaises(BrokenEmailException):
             find_author(email)
 
     def test_ascii_encoding(self):
@@ -838,7 +839,7 @@ class FuzzTest(TestCase):
         m = load_mail(file_path)
         try:
             parse_mail(m, list_id="patchwork.ozlabs.org")
-        except ValueError:
+        except BrokenEmailException:
             pass
 
     @skipIf(six.PY2, "breaks only on python3")

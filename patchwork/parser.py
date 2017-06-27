@@ -54,6 +54,10 @@ SERIES_DELAY_INTERVAL = 10
 logger = logging.getLogger(__name__)
 
 
+class BrokenEmailException(Exception):
+    pass
+
+
 def normalise_space(value):
     whitespace_re = re.compile(r'\s+')
     return whitespace_re.sub(' ', value).strip()
@@ -293,7 +297,7 @@ def find_author(mail):
     from_header = clean_header(mail.get('From'))
 
     if not from_header:
-        raise ValueError("Invalid 'From' header")
+        raise BrokenEmailException("Invalid 'From' header")
 
     name, email = (None, None)
 
@@ -324,7 +328,7 @@ def find_author(mail):
             break
 
     if not email:
-        raise ValueError("Invalid 'From' header")
+        raise BrokenEmailException("Invalid 'From' header")
 
     email = email.strip()
     if name is not None:
@@ -627,7 +631,7 @@ def clean_subject(subject, drop_prefixes=None):
     subject = clean_header(subject)
 
     if not subject:
-        raise ValueError("Invalid 'Subject' header")
+        raise BrokenEmailException("Invalid 'Subject' header")
 
     if drop_prefixes is None:
         drop_prefixes = []
@@ -908,13 +912,13 @@ def parse_mail(mail, list_id=None):
     """
     # some basic sanity checks
     if 'From' not in mail:
-        raise ValueError("Missing 'From' header")
+        raise BrokenEmailException("Missing 'From' header")
 
     if 'Subject' not in mail:
-        raise ValueError("Missing 'Subject' header")
+        raise BrokenEmailException("Missing 'Subject' header")
 
     if 'Message-Id' not in mail:
-        raise ValueError("Missing 'Message-Id' header")
+        raise BrokenEmailException("Missing 'Message-Id' header")
 
     hint = clean_header(mail.get('X-Patchwork-Hint', ''))
     if hint and hint.lower() == 'ignore':
@@ -934,7 +938,7 @@ def parse_mail(mail, list_id=None):
 
     msgid = clean_header(mail.get('Message-Id'))
     if not msgid:
-        raise ValueError("Broken 'Message-Id' header")
+        raise BrokenEmailException("Broken 'Message-Id' header")
     msgid = msgid.strip()[:255]
 
     author = find_author(mail)
