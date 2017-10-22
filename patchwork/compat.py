@@ -86,9 +86,11 @@ if settings.ENABLE_REST_API:
 if django.VERSION >= (1, 10):
     from django.urls import NoReverseMatch  # noqa
     from django.urls import reverse  # noqa
+    from django.urls import reverse_lazy  # noqa
 else:
     from django.core.urlresolvers import NoReverseMatch  # noqa
     from django.core.urlresolvers import reverse  # noqa
+    from django.core.urlresolvers import reverse_lazy  # noqa
 
 
 # is_authenticated
