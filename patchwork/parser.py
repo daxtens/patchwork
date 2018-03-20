@@ -939,7 +939,14 @@ def parse_mail(mail, list_id=None):
         list_id (str): Mailing list ID
 
     Returns:
-        None
+        patch/cover letter/comment
+        Or None if nothing is found in the mail
+                   or X-P-H: ignore
+                   or project not found
+
+    Raises:
+        ValueError if there is an error in parsing
+        Some db errors are passed through (e.g. IntegrityError)
     """
     # some basic sanity checks
     if 'From' not in mail:
