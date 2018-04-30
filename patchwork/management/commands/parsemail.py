@@ -71,8 +71,8 @@ class Command(base.BaseCommand):
         #
         # patch/comment parsed:        0
         # no parseable content found:  0
-        # db integrity/other db error: 1 (this will mean dups are logged, which
-        #                                 might get annoying - we'll see)
+        # duplicate messages:          0
+        # db integrity/other db error: 1
         # broken email (ValueError):   1 (this could also be noisy, if an issue
         #                                 we could use a different return code)
         try:

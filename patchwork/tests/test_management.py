@@ -111,10 +111,9 @@ class ParsemailTest(TestCase):
         count = models.Patch.objects.filter(project=project.id).count()
         self.assertEqual(count, 1)
 
-        with self.assertRaises(SystemExit) as exc:
-            call_command('parsemail', infile=path, list_id=project.listid)
-
-        self.assertEqual(exc.exception.code, 1)
+        # the parser should return None, not throwing an exception
+        # as this is a pretty normal part of life on a busy site
+        call_command('parsemail', infile=path, list_id=project.listid)
 
         # this would be lovely but doesn't work because we caused an error in
         # the transaction and we have no way to reset it

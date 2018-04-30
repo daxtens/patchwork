@@ -29,6 +29,7 @@ import logging
 import re
 
 from django.contrib.auth.models import User
+from django.db.utils import IntegrityError
 from django.utils import six
 
 from patchwork.models import Comment
@@ -945,8 +946,8 @@ def parse_mail(mail, list_id=None):
                    or project not found
 
     Raises:
-        ValueError if there is an error in parsing
-        Some db errors are passed through (e.g. IntegrityError)
+        ValueError if there is an error in parsing or a duplicate mail
+        Other truly unexpected issues may bubble up from the DB.
     """
     # some basic sanity checks
     if 'From' not in mail:
@@ -1008,20 +1009,24 @@ def parse_mail(mail, list_id=None):
             filenames = find_filenames(diff)
             delegate = find_delegate_by_filename(project, filenames)
 
-        patch = Patch.objects.create(
-            msgid=msgid,
-            project=project,
-            patch_project=project,
-            name=name[:255],
-            date=date,
-            headers=headers,
-            submitter=author,
-            content=message,
-            diff=diff,
-            pull_url=pull_url,
-            delegate=delegate,
-            state=find_state(mail))
-        logger.debug('Patch saved')
+        try:
+            patch = Patch.objects.create(
+                msgid=msgid,
+                project=project,
+                patch_project=project,
+                name=name[:255],
+                date=date,
+                headers=headers,
+                submitter=author,
+                content=message,
+                diff=diff,
+                pull_url=pull_url,
+                delegate=delegate,
+                state=find_state(mail))
+            logger.debug('Patch saved')
+        except IntegrityError:
+            logger.error("Duplicate mail for message ID %s" % msgid)
+            return None
 
         # if we don't have a series marker, we will never have an existing
         # series to match against.
