@@ -38,7 +38,9 @@ class MboxPatchResponseTest(TestCase):
             submission=patch,
             submitter=self.person,
             content='comment 2 text\nAcked-by: 2\n')
-        response = self.client.get(reverse('patch-mbox', args=[patch.id]))
+        response = self.client.get(
+            reverse('patch-mbox', args=[self.project.linkname,
+                                        patch.url_msgid]))
         self.assertContains(response, 'Acked-by: 1\nAcked-by: 2\n')
 
     def test_patch_utf8_nbsp(self):
@@ -50,7 +52,9 @@ class MboxPatchResponseTest(TestCase):
             submission=patch,
             submitter=self.person,
             content=u'comment\nAcked-by:\u00A0 foo')
-        response = self.client.get(reverse('patch-mbox', args=[patch.id]))
+        response = self.client.get(
+            reverse('patch-mbox', args=[self.project.linkname,
+                                        patch.url_msgid]))
         self.assertContains(response, u'\u00A0 foo\n')
 
 
@@ -60,10 +64,10 @@ class MboxPatchSplitResponseTest(TestCase):
        and places it before an '---' update line."""
 
     def setUp(self):
-        project = create_project()
+        self.project = create_project()
         self.person = create_person()
         self.patch = create_patch(
-            project=project,
+            project=self.project,
             submitter=self.person,
             diff='',
             content='comment 1 text\nAcked-by: 1\n---\nupdate\n')
@@ -73,7 +77,9 @@ class MboxPatchSplitResponseTest(TestCase):
             content='comment 2 text\nAcked-by: 2\n')
 
     def test_patch_response(self):
-        response = self.client.get(reverse('patch-mbox', args=[self.patch.id]))
+        response = self.client.get(
+            reverse('patch-mbox', args=[self.project.linkname,
+                                        self.patch.url_msgid]))
         self.assertContains(response, 'Acked-by: 1\nAcked-by: 2\n')
 
 
@@ -83,7 +89,9 @@ class MboxHeaderTest(TestCase):
 
     def _test_header_passthrough(self, header):
         patch = create_patch(headers=header + '\n')
-        response = self.client.get(reverse('patch-mbox', args=[patch.id]))
+        response = self.client.get(
+            reverse('patch-mbox', args=[patch.project.linkname,
+                                        patch.url_msgid]))
         self.assertContains(response, header)
 
     def test_header_passthrough_cc(self):
@@ -114,14 +122,18 @@ class MboxHeaderTest(TestCase):
     def test_patchwork_id_header(self):
         """Validate inclusion of generated 'X-Patchwork-Id' header."""
         patch = create_patch()
-        response = self.client.get(reverse('patch-mbox', args=[patch.id]))
+        response = self.client.get(
+            reverse('patch-mbox', args=[patch.project.linkname,
+                                        patch.url_msgid]))
         self.assertContains(response, 'X-Patchwork-Id: %d' % patch.id)
 
     def test_patchwork_delegate_header(self):
         """Validate inclusion of generated 'X-Patchwork-Delegate' header."""
         user = create_user()
         patch = create_patch(delegate=user)
-        response = self.client.get(reverse('patch-mbox', args=[patch.id]))
+        response = self.client.get(
+            reverse('patch-mbox', args=[patch.project.linkname,
+                                        patch.url_msgid]))
         self.assertContains(response, 'X-Patchwork-Delegate: %s' % user.email)
 
     def test_patchwork_from_header(self):
@@ -131,7 +143,9 @@ class MboxHeaderTest(TestCase):
 
         person = create_person(name='Jonathon Doe', email=email)
         patch = create_patch(submitter=person, headers=from_header)
-        response = self.client.get(reverse('patch-mbox', args=[patch.id]))
+        response = self.client.get(
+            reverse('patch-mbox', args=[patch.project.linkname,
+                                        patch.url_msgid]))
         self.assertContains(response, from_header)
         self.assertContains(response, 'X-Patchwork-Submitter: %s <%s>' % (
             person.name, email))
@@ -147,12 +161,16 @@ class MboxHeaderTest(TestCase):
         person = create_person(name=u'©ool guŷ')
         patch = create_patch(submitter=person)
         from_email = '<' + person.email + '>'
-        response = self.client.get(reverse('patch-mbox', args=[patch.id]))
+        response = self.client.get(
+            reverse('patch-mbox', args=[patch.project.linkname,
+                                        patch.url_msgid]))
         self.assertContains(response, from_email)
 
     def test_date_header(self):
         patch = create_patch()
-        response = self.client.get(reverse('patch-mbox', args=[patch.id]))
+        response = self.client.get(
+            reverse('patch-mbox', args=[patch.project.linkname,
+                                        patch.url_msgid]))
         mail = email.message_from_string(response.content.decode())
         mail_date = dateutil.parser.parse(mail['Date'])
         # patch dates are all in UTC
@@ -170,7 +188,9 @@ class MboxHeaderTest(TestCase):
         patch.headers = 'Date: %s\n' % date.strftime("%a, %d %b %Y %T %z")
         patch.save()
 
-        response = self.client.get(reverse('patch-mbox', args=[patch.id]))
+        response = self.client.get(
+            reverse('patch-mbox', args=[patch.project.linkname,
+                                        patch.url_msgid]))
         mail = email.message_from_string(response.content.decode())
         mail_date = dateutil.parser.parse(mail['Date'])
         self.assertEqual(mail_date, date)
@@ -187,9 +207,11 @@ class MboxCommentPostcriptUnchangedTest(TestCase):
         before.
         """
         content = 'some comment\n---\n some/file | 1 +\n'
-        patch = create_patch(content=content, diff='')
+        project = create_project()
+        patch = create_patch(content=content, diff='', project=project)
 
-        response = self.client.get(reverse('patch-mbox', args=[patch.id]))
+        response = self.client.get(
+            reverse('patch-mbox', args=[project.linkname, patch.url_msgid]))
 
         self.assertContains(response, content)
         self.assertNotContains(response, content + '\n')
@@ -202,7 +224,8 @@ class MboxSeriesDependencies(TestCase):
         patch_b = create_series_patch(series=patch_a.series)
 
         response = self.client.get('%s?series=*' % reverse(
-            'patch-mbox', args=[patch_b.patch.id]))
+            'patch-mbox', args=[patch_b.patch.project.linkname,
+                                patch_b.patch.url_msgid]))
 
         self.assertContains(response, patch_a.patch.content)
         self.assertContains(response, patch_b.patch.content)
@@ -213,6 +236,6 @@ class MboxSeriesDependencies(TestCase):
         patch = create_patch()
 
         response = self.client.get('%s?series=*' % reverse(
-            'patch-mbox', args=[patch.id]))
+            'patch-mbox', args=[patch.project.linkname, patch.url_msgid]))
 
         self.assertEqual(response.status_code, 404)

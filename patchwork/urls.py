@@ -38,22 +38,34 @@ urlpatterns = [
         name='project-detail'),
 
     # patch views
-    url(r'^patch/(?P<patch_id>\d+)/$', patch_views.patch_detail,
-        name='patch-detail'),
-    url(r'^patch/(?P<patch_id>\d+)/raw/$', patch_views.patch_raw,
-        name='patch-raw'),
-    url(r'^patch/(?P<patch_id>\d+)/mbox/$', patch_views.patch_mbox,
-        name='patch-mbox'),
+    url(r'^project/(?P<project_id>[^/]+)/patch/(?P<msgid>[^/]+)/$',
+        patch_views.patch_detail, name='patch-detail'),
+    url(r'^project/(?P<project_id>[^/]+)/patch/(?P<msgid>[^/]+)/raw/$',
+        patch_views.patch_raw, name='patch-raw'),
+    url(r'^project/(?P<project_id>[^/]+)/patch/(?P<msgid>[^/]+)/mbox/$',
+        patch_views.patch_mbox, name='patch-mbox'),
+    # ... old-style /patch/N/* urls
+    url(r'^patch/(?P<patch_id>\d+)(?P<target>.*)/$', patch_views.patch_by_id,
+        name='patch-id-redirect'),
 
     # cover views
-    url(r'^cover/(?P<cover_id>\d+)/$', cover_views.cover_detail,
-        name='cover-detail'),
-    url(r'^cover/(?P<cover_id>\d+)/mbox/$', cover_views.cover_mbox,
-        name='cover-mbox'),
+    url(r'^project/(?P<project_id>[^/]+)/cover/(?P<msgid>[^/]+)/$',
+        cover_views.cover_detail, name='cover-detail'),
+    url(r'^project/(?P<project_id>[^/]+)/cover/(?P<msgid>[^/]+)/mbox/$',
+        cover_views.cover_mbox, name='cover-mbox'),
+    # ... old-style /cover/N/* urls
+    url(r'^cover/(?P<cover_id>\d+)(?P<target>.*)/$', cover_views.cover_by_id,
+        name='cover-id-redirect'),
 
     # comment views
     url(r'^comment/(?P<comment_id>\d+)/$', comment_views.comment,
         name='comment-redirect'),
+    url(r'^project/(?P<project_id>[^/]+)/comment/(?P<msgid>[^/]+)/$',
+        comment_views.comment_by_msgid, name='comment-msgid-redirect'),
+
+    # Patch/cover/comment by msgid only, guess project
+    url(r'^message/(?P<msgid>[^/]+)$', patch_views.patch_by_msgid,
+        name='msgid-redirect'),
 
     # series views
     url(r'^series/(?P<series_id>\d+)/mbox/$', series_views.series_mbox,

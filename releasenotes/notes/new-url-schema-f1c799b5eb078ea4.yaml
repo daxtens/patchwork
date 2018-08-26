@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    The URL schema now uses message IDs, rather than patch IDs, by
+    default. Old URLs will redirect to the new URLs.
+  - |
+    A new ``/message/aaa@bbb.ccc/`` URL has been added, which will
+    look up a message by ID. If it exists as a patch, cover letter or
+    comment in any project, it will redirect to that. If it exists in
+    multiple projects, the project selection is arbitrary.

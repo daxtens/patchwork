@@ -14,6 +14,7 @@ from django.urls import reverse
 
 from patchwork.forms import CreateBundleForm
 from patchwork.forms import PatchForm
+from patchwork.models import Comment
 from patchwork.models import Bundle
 from patchwork.models import Patch
 from patchwork.models import Project
@@ -34,15 +35,21 @@ def patch_list(request, project_id):
     return render(request, 'patchwork/list.html', context)
 
 
-def patch_detail(request, patch_id):
+def patch_detail(request, project_id, msgid):
+    project = get_object_or_404(Project, linkname=project_id)
+    db_msgid = ('<%s>' % msgid)
+
     # redirect to cover letters where necessary
     try:
-        patch = get_object_or_404(Patch, id=patch_id)
-    except Http404 as exc:
-        submissions = Submission.objects.filter(id=patch_id)
+        patch = Patch.objects.get(project_id=project.id, msgid=db_msgid)
+    except Patch.DoesNotExist as exc:
+        submissions = Submission.objects.filter(project_id=project.id,
+                                                msgid=db_msgid)
         if submissions:
             return HttpResponseRedirect(
-                reverse('cover-detail', kwargs={'cover_id': patch_id}))
+                reverse('cover-detail',
+                        kwargs={'project_id': project.linkname,
+                                'msgid': msgid}))
         raise exc
 
     editable = patch.is_editable(request.user)
@@ -64,7 +71,7 @@ def patch_detail(request, patch_id):
             action = action.lower()
 
         if action == 'createbundle':
-            bundle = Bundle(owner=request.user, project=patch.project)
+            bundle = Bundle(owner=request.user, project=project)
             createbundleform = CreateBundleForm(instance=bundle,
                                                 data=request.POST)
             if createbundleform.is_valid():
@@ -115,8 +122,10 @@ def patch_detail(request, patch_id):
     return render(request, 'patchwork/submission.html', context)
 
 
-def patch_raw(request, patch_id):
-    patch = get_object_or_404(Patch, id=patch_id)
+def patch_raw(request, project_id, msgid):
+    db_msgid = ('<%s>' % msgid)
+    project = get_object_or_404(Project, linkname=project_id)
+    patch = get_object_or_404(Patch, project_id=project.id, msgid=db_msgid)
 
     response = HttpResponse(content_type="text/x-patch")
     response.write(patch.diff)
@@ -126,8 +135,10 @@ def patch_raw(request, patch_id):
     return response
 
 
-def patch_mbox(request, patch_id):
-    patch = get_object_or_404(Patch, id=patch_id)
+def patch_mbox(request, project_id, msgid):
+    db_msgid = ('<%s>' % msgid)
+    project = get_object_or_404(Project, linkname=project_id)
+    patch = get_object_or_404(Patch, project_id=project.id, msgid=db_msgid)
     series_id = request.GET.get('series')
 
     response = HttpResponse(content_type='text/plain')
@@ -144,3 +155,45 @@ def patch_mbox(request, patch_id):
         patch.filename)
 
     return response
+
+
+def patch_by_id(request, patch_id, target):
+    patch = get_object_or_404(Patch, id=patch_id)
+
+    url = reverse('patch-detail', kwargs={'project_id': patch.project.linkname,
+                                          'msgid': patch.url_msgid})
+
+    if target:
+        if target[0] == '/':
+            # strip the leading slash as we get a slash from the reverse()
+            target = target[1:]
+        url += target + '/'
+
+    return HttpResponseRedirect(url)
+
+
+def patch_by_msgid(request, msgid):
+    db_msgid = ('<%s>' % msgid)
+
+    patches = Patch.objects.filter(msgid=db_msgid)
+    if patches:
+        patch = patches.first()
+        return HttpResponseRedirect(
+            reverse('patch-detail',
+                    kwargs={'project_id': patch.project.linkname,
+                            'msgid': patch.url_msgid}))
+
+    subs = Submission.objects.filter(msgid=db_msgid)
+    if subs:
+        cover = subs.first()
+        return HttpResponseRedirect(
+            reverse('cover-detail',
+                    kwargs={'project_id': cover.project.linkname,
+                            'msgid': cover.url_msgid}))
+
+    comments = Comment.objects.filter(msgid=db_msgid)
+    if comments:
+        return HttpResponseRedirect(comments.first().get_absolute_url())
+
+    raise Http404("No patch, cover letter of comment matching %s found."
+                  % msgid)
