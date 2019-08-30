@@ -8,7 +8,6 @@ import re
 
 from django.test import TestCase
 from django.urls import reverse
-from django.utils.six.moves import zip
 
 from patchwork.models import Patch
 from patchwork.tests.utils import create_patch
