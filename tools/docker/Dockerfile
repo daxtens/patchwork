@@ -48,11 +48,20 @@ RUN pyenv latest install 2.7 && \
     pyenv latest install 3.6 && \
     pyenv latest install 3.7
 
-RUN pyenv global $(pyenv versions --bare | tac)
+# old python 2.7
+RUN pyenv global $(pyenv versions --bare)
 
 COPY requirements-*.txt /tmp/
 RUN pip install tox tox-pyenv && \
     pip install -r /tmp/requirements-dev.txt
+
+# most recent python
+RUN pyenv global $(pyenv versions --bare | tac)
+
+RUN pip install tox tox-pyenv && \
+    pip install -r /tmp/requirements-dev.txt
+
+
 
 # we deliberately leave the requirements files in tmp so we can
 # ping the user in entrypoint.sh if the change them!
