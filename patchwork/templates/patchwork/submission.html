@@ -68,12 +68,12 @@ function toggle_div(link_id, headers_id)
    </div>
   </td>
  </tr>
-{% if submission.series %}
+{% if series %}
  <tr>
   <th>Series</th>
   <td>
-   <a href="{% url 'patch-list' project_id=project.linkname %}?series={{ submission.series.id }}">
-    {{ submission.series }}
+   <a href="{% url 'patch-list' project_id=project.linkname %}?series={{ series.id }}">
+    {{ series }}
    </a>
   </td>
  </tr>
@@ -85,7 +85,7 @@ function toggle_div(link_id, headers_id)
    >show</a>
    <div id="patchrelations" class="patchrelations" style="display:none;">
     <ul>
-    {% with submission.series.cover_letter as cover %}
+    {% with series.cover_letter as cover %}
      <li>
      {% if cover %}
       {% if cover == submission %}
@@ -98,7 +98,7 @@ function toggle_div(link_id, headers_id)
      {% endif %}
      </li>
     {% endwith %}
-    {% for sibling in submission.series.patches.all %}
+    {% for sibling in series.patches.all %}
      <li>
       {% if sibling == submission %}
        {{ sibling.name|default:"[no subject]"|truncatechars:100 }}

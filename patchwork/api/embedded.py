@@ -107,7 +107,7 @@ class CoverLetterSerializer(SerializedRelatedField):
     class _Serializer(MboxMixin, WebURLMixin, BaseHyperlinkedModelSerializer):
 
         class Meta:
-            model = models.CoverLetter
+            model = models.Submission
             fields = ('id', 'url', 'web_url', 'msgid', 'list_archive_url',
                       'date', 'name', 'mbox')
             read_only_fields = fields

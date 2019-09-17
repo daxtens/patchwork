@@ -11,7 +11,6 @@ from django.db.models import Prefetch
 from patchwork.models import Bundle
 from patchwork.models import Check
 from patchwork.models import Comment
-from patchwork.models import CoverLetter
 from patchwork.models import DelegationRule
 from patchwork.models import Patch
 from patchwork.models import Person
@@ -83,8 +82,6 @@ class SubmissionAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Submission, SubmissionAdmin)
-admin.site.register(CoverLetter, SubmissionAdmin)
-
 
 class PatchAdmin(admin.ModelAdmin):
     list_display = ('name', 'submitter', 'project', 'state', 'date',

@@ -116,6 +116,7 @@ def patch_detail(request, project_id, msgid):
     context['patchform'] = form
     context['createbundleform'] = createbundleform
     context['project'] = patch.project
+    context['series'] = patch.series
 
     return render(request, 'patchwork/submission.html', context)
 

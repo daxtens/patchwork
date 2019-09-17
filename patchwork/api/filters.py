@@ -15,13 +15,13 @@ from django.forms.widgets import MultipleHiddenInput
 from patchwork.compat import NAME_FIELD
 from patchwork.models import Bundle
 from patchwork.models import Check
-from patchwork.models import CoverLetter
 from patchwork.models import Event
 from patchwork.models import Patch
 from patchwork.models import Person
 from patchwork.models import Project
 from patchwork.models import Series
 from patchwork.models import State
+from patchwork.models import Submission
 
 
 # custom fields, filters
@@ -161,8 +161,13 @@ class CoverLetterFilterSet(TimestampMixin, FilterSet):
                         widget=MultipleHiddenInput)
     submitter = PersonFilter(queryset=Person.objects.all())
 
+    @property
+    def qs(self):
+        parent = super(CoverLetterFilterSet, self).qs
+        return parent.filter(diff__isnull=True, pull_url__isnull=True)
+
     class Meta:
-        model = CoverLetter
+        model = Submission
         fields = ('project', 'series', 'submitter')
 
 
@@ -191,6 +196,8 @@ class CheckFilterSet(TimestampMixin, FilterSet):
         model = Check
         fields = ('user', 'state', 'context')
 
+def get_coverletter_qs(request):
+    return Submission.objects.all().filter(diff__isnull=True, pull_url__isnull=True)
 
 class EventFilterSet(TimestampMixin, FilterSet):
 
@@ -203,7 +210,7 @@ class EventFilterSet(TimestampMixin, FilterSet):
                         widget=MultipleHiddenInput)
     patch = BaseFilter(queryset=Patch.objects.all(),
                        widget=MultipleHiddenInput)
-    cover = BaseFilter(queryset=CoverLetter.objects.all(),
+    cover = BaseFilter(queryset=get_coverletter_qs,
                        widget=MultipleHiddenInput)
 
     class Meta:

@@ -15,7 +15,7 @@ from patchwork.api.filters import CoverLetterFilterSet
 from patchwork.api.embedded import PersonSerializer
 from patchwork.api.embedded import ProjectSerializer
 from patchwork.api.embedded import SeriesSerializer
-from patchwork.models import CoverLetter
+from patchwork.models import Submission
 
 
 class CoverLetterListSerializer(BaseHyperlinkedModelSerializer):
@@ -24,7 +24,7 @@ class CoverLetterListSerializer(BaseHyperlinkedModelSerializer):
     project = ProjectSerializer(read_only=True)
     submitter = PersonSerializer(read_only=True)
     mbox = SerializerMethodField()
-    series = SeriesSerializer(read_only=True)
+    series = SeriesSerializer(source='cl_series', read_only=True)
     comments = SerializerMethodField()
 
     def get_web_url(self, instance):
@@ -49,7 +49,7 @@ class CoverLetterListSerializer(BaseHyperlinkedModelSerializer):
         return data
 
     class Meta:
-        model = CoverLetter
+        model = Submission
         fields = ('id', 'url', 'web_url', 'project', 'msgid',
                   'list_archive_url', 'date', 'name', 'submitter', 'mbox',
                   'series', 'comments')
@@ -82,7 +82,7 @@ class CoverLetterDetailSerializer(CoverLetterListSerializer):
         return headers
 
     class Meta:
-        model = CoverLetter
+        model = Submission
         fields = CoverLetterListSerializer.Meta.fields + (
             'headers', 'content')
         read_only_fields = fields
@@ -100,8 +100,8 @@ class CoverLetterList(ListAPIView):
     ordering = 'id'
 
     def get_queryset(self):
-        return CoverLetter.objects.all()\
-            .select_related('project', 'submitter', 'series')\
+        return Submission.objects.filter(diff__isnull=True, pull_url__isnull=True)\
+            .select_related('project', 'submitter', 'cl_series')\
             .defer('content', 'headers')
 
 
@@ -111,5 +111,5 @@ class CoverLetterDetail(RetrieveAPIView):
     serializer_class = CoverLetterDetailSerializer
 
     def get_queryset(self):
-        return CoverLetter.objects.all()\
-            .select_related('project', 'submitter', 'series')
+        return Submission.objects.filter(diff__isnull=True, pull_url__isnull=True)\
+            .select_related('project', 'submitter', 'cl_series')

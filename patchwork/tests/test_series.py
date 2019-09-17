@@ -36,7 +36,7 @@ class _BaseTestCase(TestCase):
         mbox = mailbox.mbox(os.path.join(TEST_SERIES_DIR, name), create=False)
         for msg in mbox:
             obj = parser.parse_mail(msg, project.listid)
-            if type(obj) == models.CoverLetter:
+            if type(obj) == models.Submission:
                 results[0].append(obj)
             elif type(obj) == models.Patch:
                 results[1].append(obj)
@@ -75,14 +75,14 @@ class _BaseTestCase(TestCase):
 
             patches_ = patches[start_idx:end_idx]
             for patch in patches_:
-                self.assertEqual(patch.series, series[idx])
-
                 # TODO(stephenfin): Rework this function into two different
                 # functions - we're clearly not always testing patches here
                 if isinstance(patch, models.Patch):
+                    self.assertEqual(patch.series, series[idx])
                     self.assertEqual(series[idx].patches.get(id=patch.id),
                                      patch)
                 else:
+                    self.assertEqual(patch.cl_series, series[idx])
                     self.assertEqual(series[idx].cover_letter, patch)
 
             start_idx = end_idx
@@ -660,13 +660,13 @@ class SeriesNameTestCase(TestCase):
 
         cover = self._parse_mail(mbox[0])
         cover_name = 'A sample series'
-        self.assertEqual(cover.series.name, cover_name)
+        self.assertEqual(cover.cl_series.name, cover_name)
 
         self._parse_mail(mbox[1])
-        self.assertEqual(cover.series.name, cover_name)
+        self.assertEqual(cover.cl_series.name, cover_name)
 
         self._parse_mail(mbox[2])
-        self.assertEqual(cover.series.name, cover_name)
+        self.assertEqual(cover.cl_series.name, cover_name)
 
         mbox.close()
 
@@ -714,7 +714,7 @@ class SeriesNameTestCase(TestCase):
         self.assertEqual(patch.series.name, patch.name)
 
         cover = self._parse_mail(mbox[2])
-        self.assertEqual(cover.series.name, 'A sample series')
+        self.assertEqual(cover.cl_series.name, 'A sample series')
 
         mbox.close()
 

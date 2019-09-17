@@ -14,13 +14,13 @@ from django.contrib.auth.models import User
 from patchwork.models import Bundle
 from patchwork.models import Check
 from patchwork.models import Comment
-from patchwork.models import CoverLetter
 from patchwork.models import Patch
 from patchwork.models import Person
 from patchwork.models import Project
 from patchwork.models import Series
 from patchwork.models import SeriesReference
 from patchwork.models import State
+from patchwork.models import Submission
 from patchwork.tests import TEST_PATCH_DIR
 
 SAMPLE_DIFF = """--- /dev/null	2011-01-01 00:00:00.000000000 +0800
@@ -202,7 +202,7 @@ def create_patch(**kwargs):
 
 def create_cover(**kwargs):
     """Create 'CoverLetter' object."""
-    num = CoverLetter.objects.count()
+    num = Submission.objects.count() - Patch.objects.count()
 
     # NOTE(stephenfin): Despite first appearances, passing 'series' to the
     # 'create' function doesn't actually cause the relationship to be created.
@@ -230,7 +230,7 @@ def create_cover(**kwargs):
     }
     values.update(kwargs)
 
-    cover = CoverLetter.objects.create(**values)
+    cover = Submission.objects.create(**values)
 
     if series:
         series.add_cover_letter(cover)

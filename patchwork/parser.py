@@ -19,7 +19,6 @@ from django.db.utils import IntegrityError
 from django.utils import six
 
 from patchwork.models import Comment
-from patchwork.models import CoverLetter
 from patchwork.models import DelegationRule
 from patchwork.models import get_default_initial_patch_state
 from patchwork.models import Patch
@@ -1088,11 +1087,11 @@ def parse_mail(mail, list_id=None):
         if not is_comment:
             if not refs == []:
                 try:
-                    CoverLetter.objects.all().get(name=name)
-                except CoverLetter.DoesNotExist:
+                    Submission.objects.get(name=name, diff__isnull=True, pull_url__isnull=True)
+                except Submission.DoesNotExist:
                     # if no match, this is a new cover letter
                     is_cover_letter = True
-                except CoverLetter.MultipleObjectsReturned:
+                except Submission.MultipleObjectsReturned:
                     # if multiple cover letters are found, just ignore
                     pass
             else:
@@ -1135,7 +1134,7 @@ def parse_mail(mail, list_id=None):
                                  " in project %s!" % (msgid, project.name))
 
             try:
-                cover_letter = CoverLetter.objects.create(
+                cover_letter = Submission.objects.create(
                     msgid=msgid,
                     project=project,
                     name=name[:255],

@@ -44,10 +44,9 @@ class TestCoverLetterAPI(utils.APITestCase):
 
         self.assertEqual(cover_obj.submitter.id,
                          cover_json['submitter']['id'])
-
-        if hasattr(cover_obj, 'series'):
+        if hasattr(cover_obj, 'cl_series'):
             self.assertEqual(1, len(cover_json['series']))
-            self.assertEqual(cover_obj.series.id,
+            self.assertEqual(cover_obj.cl_series.id,
                              cover_json['series'][0]['id'])
         else:
             self.assertEqual([], cover_json['series'])

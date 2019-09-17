@@ -410,6 +410,16 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        return reverse('cover-detail',
+                       kwargs={'project_id': self.project.linkname,
+                               'msgid': self.url_msgid})
+
+    def get_mbox_url(self):
+        return reverse('cover-mbox',
+                       kwargs={'project_id': self.project.linkname,
+                               'msgid': self.url_msgid})
+
     class Meta:
         ordering = ['date']
         unique_together = [('msgid', 'project')]
@@ -426,19 +436,6 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
                                  'delegate'],
                          name='submission_patch_covering_idx'),
         ]
-
-
-class CoverLetter(Submission):
-
-    def get_absolute_url(self):
-        return reverse('cover-detail',
-                       kwargs={'project_id': self.project.linkname,
-                               'msgid': self.url_msgid})
-
-    def get_mbox_url(self):
-        return reverse('cover-mbox',
-                       kwargs={'project_id': self.project.linkname,
-                               'msgid': self.url_msgid})
 
 
 @python_2_unicode_compatible
@@ -673,7 +670,7 @@ class Series(FilenameMixin, models.Model):
                                 blank=True, on_delete=models.CASCADE)
 
     # content
-    cover_letter = models.OneToOneField(CoverLetter, related_name='series',
+    cover_letter = models.OneToOneField(Submission, related_name='cl_series',
                                         null=True,
                                         on_delete=models.CASCADE)
 
@@ -964,7 +961,7 @@ class Event(models.Model):
         on_delete=models.CASCADE,
         help_text='The series that this event was created for.')
     cover = models.ForeignKey(
-        CoverLetter, related_name='+', null=True, blank=True,
+        Submission, related_name='+', null=True, blank=True,
         on_delete=models.CASCADE,
         help_text='The cover letter that this event was created for.')
 
