@@ -257,7 +257,7 @@ class Tag(models.Model):
 
 
 class PatchTag(models.Model):
-    patch = models.ForeignKey('Patch', on_delete=models.CASCADE)
+    patch = models.ForeignKey('Submission', on_delete=models.CASCADE)
     tag = models.ForeignKey('Tag', on_delete=models.CASCADE)
     count = models.IntegerField(default=1)
 
@@ -379,6 +379,7 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
     diff = models.TextField(null=True, blank=True, db_column='diff')
     pull_url = models.CharField(max_length=255, null=True, blank=True, db_column='pull_url')
     commit_ref = models.CharField(max_length=255, null=True, blank=True, db_column='commit_ref')
+    tags = models.ManyToManyField(Tag, through=PatchTag)
 
     # patchwork metadata
 
@@ -400,6 +401,7 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
     number = models.PositiveSmallIntegerField(
         default=None, null=True, db_column='number',
         help_text='The number assigned to this patch in the series')
+
 
     @property
     def list_archive_url(self):
@@ -450,9 +452,6 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
 
 @python_2_unicode_compatible
 class Patch(Submission):
-    # patch metadata
-
-    tags = models.ManyToManyField(Tag, through=PatchTag)
 
     # duplicate project from submission in subclass so we can count the
     # patches in a project without needing to do a JOIN.
