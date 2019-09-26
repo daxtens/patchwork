@@ -394,10 +394,10 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
 
     # series metadata
 
-    new_series = models.ForeignKey(
+    series = models.ForeignKey(
         'Series', null=True, blank=True, on_delete=models.CASCADE,
-        related_name='new_patches', related_query_name='new_patch', db_column='series')
-    new_number = models.PositiveSmallIntegerField(
+        related_name='patches', related_query_name='patch', db_column='series')
+    number = models.PositiveSmallIntegerField(
         default=None, null=True, db_column='number',
         help_text='The number assigned to this patch in the series')
 
@@ -430,7 +430,9 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
 
     class Meta:
         ordering = ['date']
-        unique_together = [('msgid', 'project')]
+        unique_together = [('msgid', 'project'),
+                           ('series', 'number'),
+        ]
         indexes = [
             # This is a covering index for the /list/ query
             # Like what we have for Patch, but used for displaying what we want
@@ -455,15 +457,6 @@ class Patch(Submission):
     # duplicate project from submission in subclass so we can count the
     # patches in a project without needing to do a JOIN.
     patch_project = models.ForeignKey(Project, on_delete=models.CASCADE)
-
-    # series metadata
-
-    series = models.ForeignKey(
-        'Series', null=True, blank=True, on_delete=models.CASCADE,
-        related_name='patches', related_query_name='patch')
-    number = models.PositiveSmallIntegerField(
-        default=None, null=True,
-        help_text='The number assigned to this patch in the series')
 
     objects = PatchManager()
 
@@ -507,10 +500,6 @@ class Patch(Submission):
             self.hash = hash_diff(self.diff)
 
         super(Patch, self).save(**kwargs)
-
-        self.submission_ptr.new_series = self.series
-        self.submission_ptr.new_number = self.number
-        self.submission_ptr.save()
 
         self.refresh_tag_counts()
 
@@ -629,7 +618,6 @@ class Patch(Submission):
     class Meta:
         verbose_name_plural = 'Patches'
         base_manager_name = 'objects'
-        unique_together = [('series', 'number')]
 
 
 class Comment(EmailMixin, models.Model):

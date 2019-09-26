@@ -80,7 +80,7 @@ class _BaseTestCase(TestCase):
                 if isinstance(patch, models.Patch):
                     self.assertEqual(patch.series, series[idx])
                     self.assertEqual(series[idx].patches.get(id=patch.id),
-                                     patch)
+                                     patch.submission_ptr) # TODO(dja) MIGRATION HACK submission_ptr
                 else:
                     self.assertEqual(patch.cl_series, series[idx])
                     self.assertEqual(series[idx].cover_letter, patch)
