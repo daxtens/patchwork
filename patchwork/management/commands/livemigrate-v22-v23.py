@@ -16,6 +16,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
+        if hasattr(Submission, 'new_series'):
+            self.pt2()
+            return
+
         if not hasattr(Submission, 'new_diff'):
             print("Submission model is missing 'new_diff'. Have you applied the migration to add it?")
             return
@@ -28,6 +32,26 @@ class Command(BaseCommand):
         delegate = Q(delegate__isnull=False, submission_ptr__new_delegate__isnull=True)
         state = Q(state__isnull=False, submission_ptr__new_state__isnull=True)
         query = Patch.objects.filter(diffs | pull_urls | archived | commit_ref | hashq | delegate | state)
+
+        count = query.count()
+
+        for i, patch in enumerate(query.iterator()):
+            # save does the migration
+            patch.save()
+            if (i % 10) == 0:
+                self.stdout.write('%06d/%06d\r' % (i, count), ending='')
+                self.stdout.flush()
+        self.stdout.write('\ndone')
+
+    def pt2(self):
+        if not hasattr(Submission, 'new_number'):
+            print("Submission model is missing 'new_number'. Have you applied the migration to add it?")
+            return
+
+        # these should absolutely be in lockstep, but meh
+        series = Q(series__isnull=False, submission_ptr__new_series__isnull=True)
+        numbers = Q(number__isnull=False, submission_ptr__new_number__isnull=True)
+        query = Patch.objects.filter(series | numbers)
 
         count = query.count()
 

@@ -124,7 +124,8 @@ class SeriesAdmin(admin.ModelAdmin):
     readonly_fields = ('received_total', 'received_all')
     search_fields = ('submitter_name', 'submitter_email')
     exclude = ('patches', )
-    inlines = (PatchInline, )
+    # Disable temporarily as part of migration
+    # inlines = (PatchInline, )
 
     def received_all(self, series):
         return series.received_all

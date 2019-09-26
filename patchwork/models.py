@@ -392,6 +392,14 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
     archived = models.BooleanField(default=False, db_column='archived')
     hash = HashField(null=True, blank=True, db_column='hash')
 
+    # series metadata
+
+    new_series = models.ForeignKey(
+        'Series', null=True, blank=True, on_delete=models.CASCADE,
+        related_name='new_patches', related_query_name='new_patch', db_column='series')
+    new_number = models.PositiveSmallIntegerField(
+        default=None, null=True, db_column='number',
+        help_text='The number assigned to this patch in the series')
 
     @property
     def list_archive_url(self):
@@ -499,6 +507,10 @@ class Patch(Submission):
             self.hash = hash_diff(self.diff)
 
         super(Patch, self).save(**kwargs)
+
+        self.submission_ptr.new_series = self.series
+        self.submission_ptr.new_number = self.number
+        self.submission_ptr.save()
 
         self.refresh_tag_counts()
 
