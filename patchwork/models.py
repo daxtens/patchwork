@@ -375,6 +375,24 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
 
     name = models.CharField(max_length=255)
 
+    # from patch
+    new_diff = models.TextField(null=True, blank=True, db_column='diff')
+    new_pull_url = models.CharField(max_length=255, null=True, blank=True, db_column='pull_url')
+    new_commit_ref = models.CharField(max_length=255, null=True, blank=True, db_column='commit_ref')
+
+    # patchwork metadata
+
+    new_delegate = models.ForeignKey(User, blank=True, null=True,
+                                 on_delete=models.CASCADE,
+                                 db_column='delegate', related_name='patches',
+                                 related_query_name='patch')
+    new_state = models.ForeignKey(State, null=True, on_delete=models.CASCADE,
+                              db_column='state', related_name='patches',
+                              related_query_name='patch')
+    new_archived = models.BooleanField(default=False, db_column='archived')
+    new_hash = HashField(null=True, blank=True, db_column='hash')
+
+
     @property
     def list_archive_url(self):
         if not self.project.list_archive_url_format:
@@ -490,6 +508,15 @@ class Patch(Submission):
             self.hash = hash_diff(self.diff)
 
         super(Patch, self).save(**kwargs)
+
+        self.submission_ptr.new_diff = self.diff
+        self.submission_ptr.new_pull_url = self.pull_url
+        self.submission_ptr.new_commit_ref = self.commit_ref
+        self.submission_ptr.new_archived = self.archived
+        self.submission_ptr.new_hash = self.hash
+        self.submission_ptr.new_state = self.state
+        self.submission_ptr.new_delegate = self.delegate
+        self.submission_ptr.save()
 
         self.refresh_tag_counts()
 
