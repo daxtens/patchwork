@@ -376,21 +376,21 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
     name = models.CharField(max_length=255)
 
     # from patch
-    new_diff = models.TextField(null=True, blank=True, db_column='diff')
-    new_pull_url = models.CharField(max_length=255, null=True, blank=True, db_column='pull_url')
-    new_commit_ref = models.CharField(max_length=255, null=True, blank=True, db_column='commit_ref')
+    diff = models.TextField(null=True, blank=True, db_column='diff')
+    pull_url = models.CharField(max_length=255, null=True, blank=True, db_column='pull_url')
+    commit_ref = models.CharField(max_length=255, null=True, blank=True, db_column='commit_ref')
 
     # patchwork metadata
 
-    new_delegate = models.ForeignKey(User, blank=True, null=True,
+    delegate = models.ForeignKey(User, blank=True, null=True,
                                  on_delete=models.CASCADE,
                                  db_column='delegate', related_name='patches',
                                  related_query_name='patch')
-    new_state = models.ForeignKey(State, null=True, on_delete=models.CASCADE,
+    state = models.ForeignKey(State, null=True, on_delete=models.CASCADE,
                               db_column='state', related_name='patches',
                               related_query_name='patch')
-    new_archived = models.BooleanField(default=False, db_column='archived')
-    new_hash = HashField(null=True, blank=True, db_column='hash')
+    archived = models.BooleanField(default=False, db_column='archived')
+    hash = HashField(null=True, blank=True, db_column='hash')
 
 
     @property
@@ -422,8 +422,8 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
                          name='submission_covering_idx'),
 
             # This is a covering index for the /list/ query TODO MIGRATE CLEANUP
-            models.Index(fields=['new_archived', 'project', 'new_state',
-                                 'new_delegate'],
+            models.Index(fields=['archived', 'project', 'state',
+                                 'delegate'],
                          name='submission_patch_covering_idx'),
         ]
 
@@ -445,18 +445,7 @@ class CoverLetter(Submission):
 class Patch(Submission):
     # patch metadata
 
-    diff = models.TextField(null=True, blank=True)
-    commit_ref = models.CharField(max_length=255, null=True, blank=True)
-    pull_url = models.CharField(max_length=255, null=True, blank=True)
     tags = models.ManyToManyField(Tag, through=PatchTag)
-
-    # patchwork metadata
-
-    delegate = models.ForeignKey(User, blank=True, null=True,
-                                 on_delete=models.CASCADE)
-    state = models.ForeignKey(State, null=True, on_delete=models.CASCADE)
-    archived = models.BooleanField(default=False)
-    hash = HashField(null=True, blank=True)
 
     # duplicate project from submission in subclass so we can count the
     # patches in a project without needing to do a JOIN.
@@ -513,15 +502,6 @@ class Patch(Submission):
             self.hash = hash_diff(self.diff)
 
         super(Patch, self).save(**kwargs)
-
-        self.submission_ptr.new_diff = self.diff
-        self.submission_ptr.new_pull_url = self.pull_url
-        self.submission_ptr.new_commit_ref = self.commit_ref
-        self.submission_ptr.new_archived = self.archived
-        self.submission_ptr.new_hash = self.hash
-        self.submission_ptr.new_state = self.state
-        self.submission_ptr.new_delegate = self.delegate
-        self.submission_ptr.save()
 
         self.refresh_tag_counts()
 
@@ -641,13 +621,6 @@ class Patch(Submission):
         verbose_name_plural = 'Patches'
         base_manager_name = 'objects'
         unique_together = [('series', 'number')]
-
-        indexes = [
-            # This is a covering index for the /list/ query
-            models.Index(fields=['archived', 'patch_project', 'state',
-                                 'delegate'],
-                         name='patch_list_covering_idx'),
-        ]
 
 
 class Comment(EmailMixin, models.Model):
