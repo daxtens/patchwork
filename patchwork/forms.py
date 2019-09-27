@@ -9,7 +9,7 @@ from django.db.models import Q
 from django.db.utils import ProgrammingError
 
 from patchwork.models import Bundle
-from patchwork.models import Patch
+from patchwork.models import Submission
 from patchwork.models import State
 from patchwork.models import UserProfile
 
@@ -122,7 +122,7 @@ class PatchForm(forms.ModelForm):
             queryset=_get_delegate_qs(project, instance), required=False)
 
     class Meta:
-        model = Patch
+        model = Submission
         fields = ['state', 'archived', 'delegate']
 
 

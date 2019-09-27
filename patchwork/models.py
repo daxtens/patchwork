@@ -665,12 +665,6 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
     cover_objects = CoverObjectManager()
 
 
-class Patch(Submission):
-
-    class Meta:
-        verbose_name_plural = 'Patches'
-
-
 class Comment(EmailMixin, models.Model):
     # parent
 

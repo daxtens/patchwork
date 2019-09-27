@@ -21,7 +21,6 @@ from django.utils import six
 from patchwork.models import Comment
 from patchwork.models import DelegationRule
 from patchwork.models import get_default_initial_patch_state
-from patchwork.models import Patch
 from patchwork.models import Person
 from patchwork.models import Project
 from patchwork.models import Series

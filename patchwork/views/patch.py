@@ -15,7 +15,6 @@ from django.urls import reverse
 from patchwork.forms import CreateBundleForm
 from patchwork.forms import PatchForm
 from patchwork.models import Bundle
-from patchwork.models import Patch
 from patchwork.models import Project
 from patchwork.models import Submission
 from patchwork.views import generic_list

@@ -5,7 +5,7 @@
 
 from django.core.management.base import BaseCommand
 
-from patchwork.models import Patch
+from patchwork.models import Submission
 
 
 class Command(BaseCommand):
@@ -13,7 +13,7 @@ class Command(BaseCommand):
     args = '[<patch_id>...]'
 
     def handle(self, *args, **options):
-        query = Patch.objects
+        query = Submission.patch_objects
 
         if args:
             query = query.filter(id__in=args)

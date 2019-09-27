@@ -11,7 +11,7 @@ from django.core.management import BaseCommand
 from django.core.management import CommandError
 from django.utils.encoding import force_bytes
 
-from patchwork.models import Patch
+from patchwork.models import Submission
 from patchwork.models import Project
 from patchwork.views.utils import patch_to_mbox
 
@@ -58,7 +58,9 @@ class Command(BaseCommand):
                     i + 1, len(projects), project.linkname))
 
                 with tempfile.NamedTemporaryFile(delete=False) as mbox:
-                    patches = Patch.objects.filter(project=project)
+                    # TODO MIGRATE looks like this originally didn't count comments
+                    # or covers, intentional?
+                    patches = Submission.patch_objects.filter(project=project)
                     count = patches.count()
                     for j, patch in enumerate(patches):
                         if not (j % 10):

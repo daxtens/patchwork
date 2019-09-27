@@ -14,7 +14,6 @@ from django.contrib.auth.models import User
 from patchwork.models import Bundle
 from patchwork.models import Check
 from patchwork.models import Comment
-from patchwork.models import Patch
 from patchwork.models import Person
 from patchwork.models import Project
 from patchwork.models import Series

@@ -31,8 +31,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         results = {
-            models.Patch: 0,
-            models.Submission: 0,
+            True: 0,
+            False: 0,
             models.Comment: 0,
         }
         duplicates = 0
@@ -89,7 +89,8 @@ class Command(BaseCommand):
             try:
                 obj = parse_mail(msg, options['list_id'])
                 if obj:
-                    results[type(obj)] += 1
+                    if isinstance(obj, Submission):
+                        results[obj.is_patch()] += 1
                 else:
                     dropped += 1
             except DuplicateMailError as exc:
@@ -118,8 +119,8 @@ class Command(BaseCommand):
             '  %(errors)4d errors\n'
             'Total: %(new)s new entries' % {
                 'total': count,
-                'covers': results[models.Submission],
-                'patches': results[models.Patch],
+                'covers': results[False],
+                'patches': results[True],
                 'comments': results[models.Comment],
                 'duplicates': duplicates,
                 'dropped': dropped,

@@ -12,7 +12,6 @@ from patchwork.models import Bundle
 from patchwork.models import Check
 from patchwork.models import Comment
 from patchwork.models import DelegationRule
-from patchwork.models import Patch
 from patchwork.models import Person
 from patchwork.models import Project
 from patchwork.models import Series
@@ -74,16 +73,10 @@ class StateAdmin(admin.ModelAdmin):
 admin.site.register(State, StateAdmin)
 
 
+
+
+
 class SubmissionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'submitter', 'project', 'date')
-    list_filter = ('project', )
-    search_fields = ('name', 'submitter__name', 'submitter__email')
-    date_hierarchy = 'date'
-
-
-admin.site.register(Submission, SubmissionAdmin)
-
-class PatchAdmin(admin.ModelAdmin):
     list_display = ('name', 'submitter', 'project', 'state', 'date',
                     'archived', 'is_pull_request')
     list_filter = ('project', 'submitter', 'state', 'archived')
@@ -99,7 +92,7 @@ class PatchAdmin(admin.ModelAdmin):
     is_pull_request.short_description = 'Pull'
 
 
-admin.site.register(Patch, PatchAdmin)
+admin.site.register(Submission, SubmissionAdmin)
 
 
 class CommentAdmin(admin.ModelAdmin):
@@ -112,7 +105,7 @@ admin.site.register(Comment, CommentAdmin)
 
 
 class PatchInline(admin.StackedInline):
-    model = Patch
+    model = Submission
     extra = 0
 
 
@@ -124,8 +117,7 @@ class SeriesAdmin(admin.ModelAdmin):
     readonly_fields = ('received_total', 'received_all')
     search_fields = ('submitter_name', 'submitter_email')
     exclude = ('patches', )
-    # Disable temporarily as part of migration
-    # inlines = (PatchInline, )
+    inlines = (PatchInline, )
 
     def received_all(self, series):
         return series.received_all
@@ -134,7 +126,7 @@ class SeriesAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super(SeriesAdmin, self).get_queryset(request)
         return qs.prefetch_related(Prefetch(
-            'patches', Patch.objects.only('series',)))
+            'patches', Submission.patch_objects.only('series',)))
 
 
 admin.site.register(Series, SeriesAdmin)
