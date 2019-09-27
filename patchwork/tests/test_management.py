@@ -28,7 +28,7 @@ class ParsemailTest(TestCase):
         path = os.path.join(TEST_MAIL_DIR, '0001-git-pull-request.mbox')
         call_command('parsemail', infile=path)
 
-        count = models.Patch.objects.all().count()
+        count = models.Submission.patch_objects.all().count()
         self.assertEqual(count, 0)
 
     def test_missing_project_stdin(self):
@@ -38,7 +38,7 @@ class ParsemailTest(TestCase):
         call_command('parsemail', infile=None)
 
         sys.stdin.close()
-        count = models.Patch.objects.all().count()
+        count = models.Submission.patch_objects.all().count()
         self.assertEqual(count, 0)
 
     def test_valid_path(self):
@@ -48,7 +48,7 @@ class ParsemailTest(TestCase):
         path = os.path.join(TEST_MAIL_DIR, '0001-git-pull-request.mbox')
         call_command('parsemail', infile=path, list_id=project.listid)
 
-        count = models.Patch.objects.filter(project=project.id).count()
+        count = models.Submission.patch_objects.filter(project=project.id).count()
         self.assertEqual(count, 1)
 
     def test_valid_stdin(self):
@@ -62,7 +62,7 @@ class ParsemailTest(TestCase):
 
         sys.stdin.close()
 
-        count = models.Patch.objects.filter(project=project.id).count()
+        count = models.Submission.patch_objects.filter(project=project.id).count()
         self.assertEqual(count, 1)
 
     def test_utf8_path(self):
@@ -72,7 +72,7 @@ class ParsemailTest(TestCase):
         path = os.path.join(TEST_MAIL_DIR, '0013-with-utf8-body.mbox')
         call_command('parsemail', infile=path, list_id=project.listid)
 
-        count = models.Patch.objects.filter(project=project.id).count()
+        count = models.Submission.patch_objects.filter(project=project.id).count()
         self.assertEqual(count, 1)
 
     def test_utf8_stdin(self):
@@ -84,7 +84,7 @@ class ParsemailTest(TestCase):
         sys.stdin = open(path)
         call_command('parsemail', infile=None, list_id=project.listid)
 
-        count = models.Patch.objects.filter(project=project.id).count()
+        count = models.Submission.patch_objects.filter(project=project.id).count()
         self.assertEqual(count, 1)
 
     def test_dup_mail(self):
@@ -94,7 +94,7 @@ class ParsemailTest(TestCase):
         path = os.path.join(TEST_MAIL_DIR, '0001-git-pull-request.mbox')
         call_command('parsemail', infile=path, list_id=project.listid)
 
-        count = models.Patch.objects.filter(project=project.id).count()
+        count = models.Submission.patch_objects.filter(project=project.id).count()
         self.assertEqual(count, 1)
 
         # the parser should return None, not throwing an exception
@@ -103,7 +103,7 @@ class ParsemailTest(TestCase):
 
         # this would be lovely but doesn't work because we caused an error in
         # the transaction and we have no way to reset it
-        # count = models.Patch.objects.filter(project=project.id).count()
+        # count = models.Submission.patch_objects.filter(project=project.id).count()
         # self.assertEqual(count, 1)
 
 

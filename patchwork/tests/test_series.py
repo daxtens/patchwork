@@ -37,9 +37,10 @@ class _BaseTestCase(TestCase):
         for msg in mbox:
             obj = parser.parse_mail(msg, project.listid)
             if type(obj) == models.Submission:
-                results[0].append(obj)
-            elif type(obj) == models.Patch:
-                results[1].append(obj)
+                if obj.is_cover():
+                    results[0].append(obj)
+                else:
+                    results[1].append(obj)
             else:
                 results[2].append(obj)
         mbox.close()
@@ -77,10 +78,10 @@ class _BaseTestCase(TestCase):
             for patch in patches_:
                 # TODO(stephenfin): Rework this function into two different
                 # functions - we're clearly not always testing patches here
-                if isinstance(patch, models.Patch):
+                if patch.is_patch():
                     self.assertEqual(patch.series, series[idx])
                     self.assertEqual(series[idx].patches.get(id=patch.id),
-                                     patch.submission_ptr) # TODO(dja) MIGRATION HACK submission_ptr
+                                     patch)
                 else:
                     self.assertEqual(patch.cl_series, series[idx])
                     self.assertEqual(series[idx].cover_letter, patch)

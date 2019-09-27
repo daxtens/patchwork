@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.urls import reverse
 
-from patchwork.models import Patch
+from patchwork.models import Submission
 from patchwork.models import Project
 
 from django.db import connection
@@ -35,7 +35,7 @@ def project_detail(request, project_id):
 
     # TODO MIGRATE CLEANUP
     n_patches = {
-        archived: Patch.objects.filter(
+        archived: Submission.patch_objects.filter(
            project_id=project.id, archived=archived).count()
         for archived in [True, False]
     }

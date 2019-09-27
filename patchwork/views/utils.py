@@ -17,7 +17,6 @@ from django.http import Http404
 from django.utils import six
 
 from patchwork.models import Comment
-from patchwork.models import Patch
 
 if settings.ENABLE_REST_API:
     from rest_framework.authtoken.models import Token
@@ -44,7 +43,7 @@ def _submission_to_mbox(submission):
     Returns:
         A string for the mbox file.
     """
-    is_patch = isinstance(submission, Patch)
+    is_patch = submission.is_patch() # TODO MIGRATE cleanup
 
     postscript_re = re.compile('\n-{2,3} ?\n')
     body = ''
@@ -167,7 +166,7 @@ def series_to_mbox(series):
     mbox = []
 
     for dep in series.patches.all().order_by('number'):
-        mbox.append(patch_to_mbox(dep.patch))
+        mbox.append(patch_to_mbox(dep))
 
     return '\n'.join(mbox)
 

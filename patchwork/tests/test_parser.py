@@ -17,7 +17,7 @@ from django.test import TransactionTestCase
 from django.utils import six
 
 from patchwork.models import Comment
-from patchwork.models import Patch
+from patchwork.models import Submission
 from patchwork.models import Person
 from patchwork.models import State
 from patchwork.parser import clean_subject
@@ -439,8 +439,8 @@ class MultipleProjectPatchTest(TestCase):
         parse_mail(email)
 
     def test_parsed_projects(self):
-        self.assertEqual(Patch.objects.filter(project=self.p1).count(), 1)
-        self.assertEqual(Patch.objects.filter(project=self.p2).count(), 1)
+        self.assertEqual(Submission.patch_objects.filter(project=self.p1).count(), 1)
+        self.assertEqual(Submission.patch_objects.filter(project=self.p2).count(), 1)
 
 
 class MultipleProjectPatchCommentTest(MultipleProjectPatchTest):
@@ -463,7 +463,7 @@ class MultipleProjectPatchCommentTest(MultipleProjectPatchTest):
 
     def test_parsed_comment(self):
         for project in [self.p1, self.p2]:
-            patch = Patch.objects.filter(project=project)[0]
+            patch = Submission.patch_objects.filter(project=project)[0]
             # we should see the reply comment only
             self.assertEqual(
                 Comment.objects.filter(submission=patch).count(), 1)
@@ -648,7 +648,7 @@ class EncodingParseTest(TestCase):
     def _test_encoded_patch_parse(self, mbox_filename):
         mail = read_mail(mbox_filename, self.project)
         parse_mail(mail, list_id=self.project.listid)
-        self.assertEqual(Patch.objects.all().count(), 1)
+        self.assertEqual(Submission.patch_objects.all().count(), 1)
 
     def test_invalid_header_char(self):
         """Validate behaviour when an invalid character is in a header."""
@@ -704,7 +704,7 @@ class DelegateRequestTest(TestCase):
         return email
 
     def assertDelegate(self, delegate):  # noqa
-        query = Patch.objects.filter(project=self.project)
+        query = Submission.patch_objects.filter(project=self.project)
         self.assertEqual(query.count(), 1)
         self.assertEqual(query[0].delegate, delegate)
 
@@ -746,7 +746,7 @@ class InitialPatchStateTest(TestCase):
         return email
 
     def assertState(self, state):  # noqa
-        query = Patch.objects.filter(project=self.project)
+        query = Submission.patch_objects.filter(project=self.project)
         self.assertEqual(query.count(), 1)
         self.assertEqual(query[0].state, state)
 
@@ -797,8 +797,8 @@ class ParseInitialTagsTest(PatchTest):
         parse_mail(email)
 
     def test_tags(self):
-        self.assertEqual(Patch.objects.count(), 1)
-        patch = Patch.objects.all()[0]
+        self.assertEqual(Submission.patch_objects.count(), 1)
+        patch = Submission.patch_objects.all()[0]
         self.assertEqual(patch.patchtag_set.filter(
             tag__name='Acked-by').count(), 0)
         self.assertEqual(patch.patchtag_set.get(
@@ -825,8 +825,8 @@ class ParseCommentTagsTest(PatchTest):
         parse_mail(email2)
 
     def test_tags(self):
-        self.assertEqual(Patch.objects.count(), 1)
-        patch = Patch.objects.all()[0]
+        self.assertEqual(Submission.patch_objects.count(), 1)
+        patch = Submission.patch_objects.all()[0]
         self.assertEqual(patch.patchtag_set.filter(
             tag__name='Acked-by').count(), 0)
         self.assertEqual(patch.patchtag_set.get(

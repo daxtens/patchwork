@@ -21,10 +21,10 @@ def cover_detail(request, project_id, msgid):
     db_msgid = ('<%s>' % msgid)
 
     # redirect to patches where necessary
-    try:
-        patch = get_object_or_404(Patch, project_id=project.id,
+    try: #TODO MIGRATE CLEAN
+        patch = get_object_or_404(Submission, project_id=project.id,
                                   msgid=db_msgid)
-        if patch:
+        if patch.is_patch():
             return HttpResponseRedirect(
                 reverse('patch-detail',
                         kwargs={'project_id': project.linkname,

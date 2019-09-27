@@ -155,7 +155,7 @@ def create_bundle(**kwargs):
 
 def create_patch(**kwargs):
     """Create 'Patch' object."""
-    num = Patch.objects.count()
+    num = Submission.patch_objects.count()
 
     # NOTE(stephenfin): Even though we could simply pass 'series' into the
     # constructor, we don't as that's not what we do in the parser and not what
@@ -188,7 +188,7 @@ def create_patch(**kwargs):
     }
     values.update(kwargs)
 
-    patch = Patch.objects.create(**values)
+    patch = Submission.patch_objects.create(**values)
 
     if series:
         number = number or series.patches.count() + 1
@@ -199,7 +199,7 @@ def create_patch(**kwargs):
 
 def create_cover(**kwargs):
     """Create 'CoverLetter' object."""
-    num = Submission.objects.count() - Patch.objects.count()
+    num = Submission.objects.count()
 
     # NOTE(stephenfin): Despite first appearances, passing 'series' to the
     # 'create' function doesn't actually cause the relationship to be created.
@@ -227,7 +227,7 @@ def create_cover(**kwargs):
     }
     values.update(kwargs)
 
-    cover = Submission.objects.create(**values)
+    cover = Submission.cover_objects.create(**values)
 
     if series:
         series.add_cover_letter(cover)

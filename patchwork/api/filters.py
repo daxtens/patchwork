@@ -183,7 +183,7 @@ class PatchFilterSet(TimestampMixin, FilterSet):
     state = StateFilter(queryset=State.objects.all())
 
     class Meta:
-        model = Patch
+        model = Submission # TODO MIGRATE - exclude covers
         fields = ('project', 'series', 'submitter', 'delegate',
                   'state', 'archived')
 
@@ -197,7 +197,7 @@ class CheckFilterSet(TimestampMixin, FilterSet):
         fields = ('user', 'state', 'context')
 
 def get_coverletter_qs(request):
-    return Submission.objects.all().filter(diff__isnull=True, pull_url__isnull=True)
+    return Submission.cover_objects.all()
 
 class EventFilterSet(TimestampMixin, FilterSet):
 
@@ -208,7 +208,7 @@ class EventFilterSet(TimestampMixin, FilterSet):
                             widget=MultipleHiddenInput)
     series = BaseFilter(queryset=Series.objects.all(),
                         widget=MultipleHiddenInput)
-    patch = BaseFilter(queryset=Patch.objects.all(),
+    patch = BaseFilter(queryset=Submission.patch_objects.all(),
                        widget=MultipleHiddenInput)
     cover = BaseFilter(queryset=get_coverletter_qs,
                        widget=MultipleHiddenInput)

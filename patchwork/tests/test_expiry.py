@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 
 from patchwork.models import EmailConfirmation
-from patchwork.models import Patch
+from patchwork.models import Submission
 from patchwork.models import Person
 from patchwork.notifications import expire_notifications
 from patchwork.tests.utils import create_patch
@@ -93,6 +93,6 @@ class TestRegistrationExpiry(TestCase):
                          .exists())
         # but the patch and person should still be present
         self.assertTrue(Person.objects.filter(pk=submitter.pk).exists())
-        self.assertTrue(Patch.objects.filter(pk=patch.pk).exists())
+        self.assertTrue(Submission.patch_objects.filter(pk=patch.pk).exists())
         # and there should be no user associated with the person
         self.assertEqual(Person.objects.get(pk=submitter.pk).user, None)

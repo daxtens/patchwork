@@ -10,7 +10,7 @@ import unittest
 from django.conf import settings
 from django.urls import reverse
 
-from patchwork.models import Patch
+from patchwork.models import Submission
 from patchwork.tests.api import utils
 from patchwork.tests.utils import create_maintainer
 from patchwork.tests.utils import create_patch
@@ -257,15 +257,15 @@ class TestPatchAPI(utils.APITestCase):
         resp = self.client.patch(self.api_url(patch.id),
                                  {'state': state.name, 'delegate': user.id})
         self.assertEqual(status.HTTP_200_OK, resp.status_code, resp)
-        self.assertEqual(Patch.objects.get(id=patch.id).state, state)
-        self.assertEqual(Patch.objects.get(id=patch.id).delegate, user)
+        self.assertEqual(Submission.patch_objects.get(id=patch.id).state, state)
+        self.assertEqual(Submission.patch_objects.get(id=patch.id).delegate, user)
 
         # (who can unset fields too)
         # we need to send as JSON due to https://stackoverflow.com/q/30677216/
         resp = self.client.patch(self.api_url(patch.id), {'delegate': None},
                                  format='json')
         self.assertEqual(status.HTTP_200_OK, resp.status_code, resp)
-        self.assertIsNone(Patch.objects.get(id=patch.id).delegate)
+        self.assertIsNone(Submission.patch_objects.get(id=patch.id).delegate)
 
     @utils.store_samples('patch-update-error-bad-request')
     def test_update_invalid_state(self):
@@ -305,8 +305,8 @@ class TestPatchAPI(utils.APITestCase):
         resp = self.client.patch(self.api_url(patch.id),
                                  {'delegate': user_b.id})
         self.assertEqual(status.HTTP_200_OK, resp.status_code, resp)
-        self.assertEqual(Patch.objects.get(id=patch.id).state, state)
-        self.assertEqual(Patch.objects.get(id=patch.id).delegate, user_b)
+        self.assertEqual(Submission.patch_objects.get(id=patch.id).state, state)
+        self.assertEqual(Submission.patch_objects.get(id=patch.id).delegate, user_b)
 
     def test_update_invalid_delegate(self):
         """Update patch with invalid fields.

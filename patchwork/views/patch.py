@@ -39,17 +39,13 @@ def patch_detail(request, project_id, msgid):
     db_msgid = ('<%s>' % msgid)
 
     # redirect to cover letters where necessary
-    try:
-        patch = Patch.objects.get(project_id=project.id, msgid=db_msgid)
-    except Patch.DoesNotExist as exc:
-        submissions = Submission.objects.filter(project_id=project.id,
-                                                msgid=db_msgid)
-        if submissions:
-            return HttpResponseRedirect(
-                reverse('cover-detail',
-                        kwargs={'project_id': project.linkname,
-                                'msgid': msgid}))
-        raise exc
+    patch = get_object_or_404(Submission, project_id=project.id, msgid=db_msgid)
+
+    # TODO MIGRATE THIS IS WHAT WE WANT I THINK
+    if patch.is_cover():
+        return HttpResponseRedirect(
+            reverse('cover-detail', kwargs={'project_id': project.linkname,
+                                            'msgid': msgid}))
 
     editable = patch.is_editable(request.user)
     context = {
@@ -124,7 +120,7 @@ def patch_detail(request, project_id, msgid):
 def patch_raw(request, project_id, msgid):
     db_msgid = ('<%s>' % msgid)
     project = get_object_or_404(Project, linkname=project_id)
-    patch = get_object_or_404(Patch, project_id=project.id, msgid=db_msgid)
+    patch = get_object_or_404(Submission, project_id=project.id, msgid=db_msgid)
 
     response = HttpResponse(content_type="text/x-patch")
     response.write(patch.diff)
@@ -137,7 +133,7 @@ def patch_raw(request, project_id, msgid):
 def patch_mbox(request, project_id, msgid):
     db_msgid = ('<%s>' % msgid)
     project = get_object_or_404(Project, linkname=project_id)
-    patch = get_object_or_404(Patch, project_id=project.id, msgid=db_msgid)
+    patch = get_object_or_404(Submission, project_id=project.id, msgid=db_msgid)
     series_id = request.GET.get('series')
 
     response = HttpResponse(content_type='text/plain')
@@ -157,7 +153,7 @@ def patch_mbox(request, project_id, msgid):
 
 
 def patch_by_id(request, patch_id):
-    patch = get_object_or_404(Patch, id=patch_id)
+    patch = get_object_or_404(Submission, id=patch_id)
 
     url = reverse('patch-detail', kwargs={'project_id': patch.project.linkname,
                                           'msgid': patch.url_msgid})
@@ -166,7 +162,7 @@ def patch_by_id(request, patch_id):
 
 
 def patch_mbox_by_id(request, patch_id):
-    patch = get_object_or_404(Patch, id=patch_id)
+    patch = get_object_or_404(Submission, id=patch_id)
 
     url = reverse('patch-mbox', kwargs={'project_id': patch.project.linkname,
                                         'msgid': patch.url_msgid})
@@ -175,7 +171,7 @@ def patch_mbox_by_id(request, patch_id):
 
 
 def patch_raw_by_id(request, patch_id):
-    patch = get_object_or_404(Patch, id=patch_id)
+    patch = get_object_or_404(Submission, id=patch_id)
 
     url = reverse('patch-raw', kwargs={'project_id': patch.project.linkname,
                                        'msgid': patch.url_msgid})

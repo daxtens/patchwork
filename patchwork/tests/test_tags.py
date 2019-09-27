@@ -6,7 +6,7 @@
 from django.test import TestCase
 from django.test import TransactionTestCase
 
-from patchwork.models import Patch
+from patchwork.models import Submission
 from patchwork.models import PatchTag
 from patchwork.models import Tag
 from patchwork.tests.utils import create_comment
@@ -20,7 +20,7 @@ class ExtractTagsTest(TestCase):
     name_email = 'test name <' + email + '>'
 
     def assertTagsEqual(self, str, acks, reviews, tests):  # noqa
-        counts = Patch.extract_tags(str, Tag.objects.all())
+        counts = Submission.extract_tags(str, Tag.objects.all())
         self.assertEqual((acks, reviews, tests),
                          (counts[Tag.objects.get(name='Acked-by')],
                           counts[Tag.objects.get(name='Reviewed-by')],
@@ -79,7 +79,7 @@ class PatchTagsTest(TransactionTestCase):
         self.patch.project.save()
 
     def assertTagsEqual(self, patch, acks, reviews, tests):  # noqa
-        patch = Patch.objects.get(pk=patch.pk)
+        patch = Submission.patch_objects.get(pk=patch.pk)
 
         def count(name):
             try:
@@ -181,7 +181,7 @@ class PatchTagManagerTest(PatchTagsTest):
         # the patch table lookup, and the prefetch_related for the
         # projects table.
         with self.assertNumQueries(2):
-            patch = Patch.objects.with_tag_counts(project=patch.project) \
+            patch = Submission.patch_objects.with_tag_counts(project=patch.project) \
                 .get(pk=patch.pk)
 
             counts = (

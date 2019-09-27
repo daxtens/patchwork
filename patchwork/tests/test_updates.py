@@ -6,7 +6,7 @@
 from django.test import TestCase
 from django.urls import reverse
 
-from patchwork.models import Patch
+from patchwork.models import Submission
 from patchwork.models import State
 from patchwork.tests.utils import create_patches
 from patchwork.tests.utils import create_project
@@ -50,7 +50,7 @@ class MultipleUpdateTest(TestCase):
         self.assertContains(response, 'No patches to display',
                             status_code=200)
         # Don't use the cached version of patches: retrieve from the DB
-        for patch in [Patch.objects.get(pk=p.pk) for p in self.patches]:
+        for patch in [Submission.patch_objects.get(pk=p.pk) for p in self.patches]:
             self.assertTrue(patch.archived)
 
     def test_unarchiving_patches(self):
@@ -66,7 +66,7 @@ class MultipleUpdateTest(TestCase):
 
         self.assertContains(response, self.properties_form_id,
                             status_code=200)
-        for patch in [Patch.objects.get(pk=p.pk) for p in self.patches]:
+        for patch in [Submission.patch_objects.get(pk=p.pk) for p in self.patches]:
             self.assertFalse(patch.archived)
 
     def _test_state_change(self, state):
@@ -85,7 +85,7 @@ class MultipleUpdateTest(TestCase):
 
         self._test_state_change(state.pk)
 
-        for patch in [Patch.objects.get(pk=p.pk) for p in self.patches]:
+        for patch in [Submission.patch_objects.get(pk=p.pk) for p in self.patches]:
             self.assertEqual(patch.state, state)
 
     def test_state_change_invalid(self):
@@ -94,7 +94,7 @@ class MultipleUpdateTest(TestCase):
 
         response = self._test_state_change(state)
 
-        new_states = [Patch.objects.get(pk=p.pk).state for p in self.patches]
+        new_states = [Submission.patch_objects.get(pk=p.pk).state for p in self.patches]
         self.assertEqual(new_states, orig_states)
         self.assertFormError(response, 'patchform', 'state',
                              'Select a valid choice. That choice is not one '
@@ -115,11 +115,11 @@ class MultipleUpdateTest(TestCase):
 
         self._test_delegate_change(str(delegate.pk))
 
-        for patch in [Patch.objects.get(pk=p.pk) for p in self.patches]:
+        for patch in [Submission.patch_objects.get(pk=p.pk) for p in self.patches]:
             self.assertEqual(patch.delegate, delegate)
 
     def test_delegate_clear(self):
         self._test_delegate_change('')
 
-        for patch in [Patch.objects.get(pk=p.pk) for p in self.patches]:
+        for patch in [Submission.patch_objects.get(pk=p.pk) for p in self.patches]:
             self.assertEqual(patch.delegate, None)

@@ -20,7 +20,7 @@ from patchwork.api.embedded import PersonSerializer
 from patchwork.api.embedded import ProjectSerializer
 from patchwork.api.embedded import SeriesSerializer
 from patchwork.api.embedded import UserSerializer
-from patchwork.models import Patch
+from patchwork.models import Submission
 from patchwork.models import State
 from patchwork.parser import clean_subject
 
@@ -120,7 +120,7 @@ class PatchListSerializer(BaseHyperlinkedModelSerializer):
         return data
 
     class Meta:
-        model = Patch
+        model = Submission # TODO MIGRATION, do we need to get queryset?
         fields = ('id', 'url', 'web_url', 'project', 'msgid',
                   'list_archive_url', 'date', 'name', 'commit_ref', 'pull_url',
                   'state', 'archived', 'hash', 'submitter', 'delegate', 'mbox',
@@ -160,7 +160,7 @@ class PatchDetailSerializer(PatchListSerializer):
         return clean_subject(instance.name)[1]
 
     class Meta:
-        model = Patch
+        model = Submission # TODO MIGRATE
         fields = PatchListSerializer.Meta.fields + (
             'headers', 'content', 'diff', 'prefixes')
         read_only_fields = PatchListSerializer.Meta.read_only_fields + (
@@ -181,7 +181,7 @@ class PatchList(ListAPIView):
     ordering = 'id'
 
     def get_queryset(self):
-        return Patch.objects.all()\
+        return Submission.patch_objects.all()\
             .prefetch_related('check_set')\
             .select_related('project', 'state', 'submitter', 'delegate',
                             'series')\
@@ -203,7 +203,7 @@ class PatchDetail(RetrieveUpdateAPIView):
     serializer_class = PatchDetailSerializer
 
     def get_queryset(self):
-        return Patch.objects.all()\
+        return Submission.patch_objects.all()\
             .prefetch_related('check_set')\
             .select_related('project', 'state', 'submitter', 'delegate',
                             'series')

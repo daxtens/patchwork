@@ -11,7 +11,7 @@ from patchwork.filters import Filters
 from patchwork.forms import MultiplePatchForm
 from patchwork.models import Bundle
 from patchwork.models import BundlePatch
-from patchwork.models import Patch
+from patchwork.models import Submission
 from patchwork.models import Project
 from patchwork.models import Check
 from patchwork.paginator import Paginator
@@ -234,7 +234,7 @@ def generic_list(request, project, view, view_args=None, filter_settings=None,
         if data.get('bundle_name', False):
             action = 'create'
 
-        ps = Patch.objects.filter(id__in=get_patch_ids(data))
+        ps = Submission.patch_objects.filter(id__in=get_patch_ids(data))
 
         if action in bundle_actions:
             errors = set_bundle(request, project, action, data, ps, context)
@@ -257,7 +257,7 @@ def generic_list(request, project, view, view_args=None, filter_settings=None,
             context['filters'].set_status(filterclass, setting)
 
     if patches is None:
-        patches = Patch.objects.filter(project=project)
+        patches = Submission.patch_objects.filter(project=project)
 
     # annotate with tag counts
     patches = patches.with_tag_counts(project)
@@ -276,7 +276,7 @@ def generic_list(request, project, view, view_args=None, filter_settings=None,
                                      'series')
 
     patches = patches.only('state', 'submitter', 'delegate', 'project',
-                           'submission_ptr__series__name', 'name', 'date', 'msgid')
+                           'series__name', 'name', 'date', 'msgid')
 
     # we also need checks and series
     patches = patches.prefetch_related(

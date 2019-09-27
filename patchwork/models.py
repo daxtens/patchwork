@@ -188,9 +188,9 @@ class UserProfile(models.Model):
     def todo_patches(self, project=None):
         # filter on project, if necessary
         if project:
-            qs = Patch.objects.filter(project=project)
+            qs = Submission.patch_objects.filter(project=project)
         else:
-            qs = Patch.objects
+            qs = Submission.patch_objects
 
         qs = qs.filter(archived=False).filter(
             delegate=self.user).filter(state__in=State.objects.filter(
@@ -294,7 +294,7 @@ class PatchQuerySet(models.query.QuerySet):
                 "coalesce("
                 "(SELECT count FROM patchwork_patchtag"
                 " WHERE patchwork_patchtag.patch_id="
-                "patchwork_patch.submission_ptr_id"
+                "patchwork_submission.id"
                 " AND patchwork_patchtag.tag_id=%s), 0)")
             select_params.append(tag.id)
 
@@ -305,6 +305,56 @@ class PatchManager(models.Manager):
 
     def get_queryset(self):
         return PatchQuerySet(self.model, using=self.db)
+
+    def with_tag_counts(self, project):
+        return self.get_queryset().with_tag_counts(project)
+
+
+class CoverObjectManager(models.Manager):
+
+    def get_queryset(self):
+        return models.query.QuerySet(self.model, using=self.db)\
+               .filter(pull_url__isnull=True, diff__isnull=True)
+
+
+class PatchObjectQuerySet(models.query.QuerySet):
+
+    def with_tag_counts(self, project=None):
+        patches = self.exclude(pull_url__isnull=True, diff__isnull=True)
+
+        if project and not project.use_tags:
+            return patches
+
+        # We need the project's use_tags field loaded for Project.tags().
+        # Using prefetch_related means we'll share the one instance of
+        # Project, and share the project.tags cache between all patch.project
+        # references.
+        qs = patches.prefetch_related('project')
+        select = OrderedDict()
+        select_params = []
+
+        # All projects have the same tags, so we're good to go here
+        if project:
+            tags = project.tags
+        else:
+            tags = Tag.objects.all()
+
+        for tag in tags:
+            select[tag.attr_name] = (
+                "coalesce("
+                "(SELECT count FROM patchwork_patchtag"
+                " WHERE patchwork_patchtag.patch_id="
+                "patchwork_submission.id"
+                " AND patchwork_patchtag.tag_id=%s), 0)")
+            select_params.append(tag.id)
+
+        return qs.extra(select=select, select_params=select_params)
+
+
+class PatchObjectManager(models.Manager):
+
+    def get_queryset(self):
+        return PatchObjectQuerySet(self.model, using=self.db)
 
     def with_tag_counts(self, project):
         return self.get_queryset().with_tag_counts(project)
@@ -415,20 +465,59 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
     # patchwork metadata
 
     def is_editable(self, user):
-        return False
+        if self.is_cover():
+            return False
+
+        if not user.is_authenticated:
+            return False
+
+        if user in [self.submitter.user, self.delegate]:
+            return True
+
+        return self.project.is_editable(user)
 
     def __str__(self):
         return self.name
 
+    def is_patch(self):
+        return (self.diff is not None) or (self.pull_url is not None)
+
+    def is_cover(self):
+        return not self.is_patch()
+
     def get_absolute_url(self):
-        return reverse('cover-detail',
+        if self.is_cover():
+            return reverse('cover-detail',
+                           kwargs={'project_id': self.project.linkname,
+                                   'msgid': self.url_msgid})
+        return reverse('patch-detail',
                        kwargs={'project_id': self.project.linkname,
                                'msgid': self.url_msgid})
 
     def get_mbox_url(self):
-        return reverse('cover-mbox',
+        if self.is_cover():
+            return reverse('cover-mbox',
+                           kwargs={'project_id': self.project.linkname,
+                                   'msgid': self.url_msgid})
+        return reverse('patch-mbox',
                        kwargs={'project_id': self.project.linkname,
                                'msgid': self.url_msgid})
+
+
+    def save(self, *args, **kwargs):
+        if self.is_cover():
+            super(Submission, self).save(*args, **kwargs)
+            return
+
+        if not hasattr(self, 'state') or not self.state:
+            self.state = get_default_initial_patch_state()
+
+        if self.hash is None and self.diff is not None:
+            self.hash = hash_diff(self.diff)
+
+        super(Submission, self).save(*args, **kwargs)
+
+        self.refresh_tag_counts()
 
     class Meta:
         ordering = ['date']
@@ -448,12 +537,6 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
                                  'delegate'],
                          name='submission_patch_covering_idx'),
         ]
-
-
-@python_2_unicode_compatible
-class Patch(Submission):
-
-    objects = PatchManager()
 
     @staticmethod
     def extract_tags(content, tags):
@@ -477,7 +560,6 @@ class Patch(Submission):
     def refresh_tag_counts(self):
         tags = self.project.tags
         counter = Counter()
-
         if self.content:
             counter += self.extract_tags(self.content, tags)
 
@@ -486,26 +568,6 @@ class Patch(Submission):
 
         for tag in tags:
             self._set_tag(tag, counter[tag])
-
-    def save(self, *args, **kwargs):
-        if not hasattr(self, 'state') or not self.state:
-            self.state = get_default_initial_patch_state()
-
-        if self.hash is None and self.diff is not None:
-            self.hash = hash_diff(self.diff)
-
-        super(Patch, self).save(**kwargs)
-
-        self.refresh_tag_counts()
-
-    def is_editable(self, user):
-        if not user.is_authenticated:
-            return False
-
-        if user in [self.submitter.user, self.delegate]:
-            return True
-
-        return self.project.is_editable(user)
 
     @property
     def combined_check_state(self):
@@ -597,22 +659,16 @@ class Patch(Submission):
 
         return counts
 
-    def get_absolute_url(self):
-        return reverse('patch-detail',
-                       kwargs={'project_id': self.project.linkname,
-                               'msgid': self.url_msgid})
+    # objects = None - sigh, we need this for the Comment case. etc
+    objects = PatchManager()
+    patch_objects = PatchObjectManager()
+    cover_objects = CoverObjectManager()
 
-    def get_mbox_url(self):
-        return reverse('patch-mbox',
-                       kwargs={'project_id': self.project.linkname,
-                               'msgid': self.url_msgid})
 
-    def __str__(self):
-        return self.name
+class Patch(Submission):
 
     class Meta:
         verbose_name_plural = 'Patches'
-        base_manager_name = 'objects'
 
 
 class Comment(EmailMixin, models.Model):
@@ -636,13 +692,13 @@ class Comment(EmailMixin, models.Model):
 
     def save(self, *args, **kwargs):
         super(Comment, self).save(*args, **kwargs)
-        if hasattr(self.submission, 'patch'):
-            self.submission.patch.refresh_tag_counts()
+        if self.submission.is_patch():
+            self.submission.refresh_tag_counts()
 
     def delete(self, *args, **kwargs):
         super(Comment, self).delete(*args, **kwargs)
-        if hasattr(self.submission, 'patch'):
-            self.submission.patch.refresh_tag_counts()
+        if self.submission.is_patch():
+            self.submission.refresh_tag_counts()
 
     def is_editable(self, user):
         return False
@@ -733,8 +789,8 @@ class Series(FilenameMixin, models.Model):
             self.name = self._format_name(cover)
         else:
             try:
-                name = Patch.objects.get(series=self, number=1).name
-            except Patch.DoesNotExist:
+                name = Submission.patch_objects.get(series=self, number=1).name
+            except Submission.DoesNotExist:
                 name = None
 
             if self.name == name:
@@ -798,7 +854,7 @@ class Bundle(models.Model):
                               related_query_name='bundle')
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     name = models.CharField(max_length=50, null=False, blank=False)
-    patches = models.ManyToManyField(Patch, through='BundlePatch')
+    patches = models.ManyToManyField(Submission, through='BundlePatch')
     public = models.BooleanField(default=False)
 
     def ordered_patches(self):
@@ -836,7 +892,7 @@ class Bundle(models.Model):
 
 
 class BundlePatch(models.Model):
-    patch = models.ForeignKey(Patch, on_delete=models.CASCADE)
+    patch = models.ForeignKey(Submission, on_delete=models.CASCADE)
     bundle = models.ForeignKey(Bundle, on_delete=models.CASCADE)
     order = models.IntegerField()
 
@@ -865,7 +921,7 @@ class Check(models.Model):
         (STATE_FAIL, 'fail'),
     )
 
-    patch = models.ForeignKey(Patch, on_delete=models.CASCADE)
+    patch = models.ForeignKey(Submission, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     date = models.DateTimeField(default=datetime.datetime.utcnow)
 
@@ -948,7 +1004,7 @@ class Event(models.Model):
     # used
 
     patch = models.ForeignKey(
-        Patch, related_name='+', null=True, blank=True,
+        Submission, related_name='+', null=True, blank=True,
         on_delete=models.CASCADE,
         help_text='The patch that this event was created for.')
     series = models.ForeignKey(
@@ -1036,7 +1092,7 @@ class EmailOptout(models.Model):
 
 
 class PatchChangeNotification(models.Model):
-    patch = models.OneToOneField(Patch, primary_key=True,
+    patch = models.OneToOneField(Submission, primary_key=True,
                                  on_delete=models.CASCADE)
     last_modified = models.DateTimeField(default=datetime.datetime.utcnow)
     orig_state = models.ForeignKey(State, on_delete=models.CASCADE)

@@ -10,7 +10,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils.six.moves import zip
 
-from patchwork.models import Patch
+from patchwork.models import Submission
 from patchwork.tests.utils import create_patch
 from patchwork.tests.utils import create_person
 from patchwork.tests.utils import create_project
@@ -69,7 +69,7 @@ class PatchOrderTest(TestCase):
     def _test_sequence(self, response, test_fn):
         ids = self._extract_patch_ids(response)
         self.assertTrue(bool(ids))
-        patches = [Patch.objects.get(id=i) for i in ids]
+        patches = [Submission.patch_objects.get(id=i) for i in ids]
         pairs = list(zip(patches, patches[1:]))
 
         for p1, p2 in pairs:

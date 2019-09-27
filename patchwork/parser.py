@@ -1011,7 +1011,7 @@ def parse_mail(mail, list_id=None):
             delegate = find_delegate_by_filename(project, filenames)
 
         try:
-            patch = Patch.objects.create(
+            patch = Submission.patch_objects.create(
                 msgid=msgid,
                 project=project,
                 name=name[:255],
@@ -1039,7 +1039,7 @@ def parse_mail(mail, list_id=None):
         # - there is no existing series to assign this patch to, or
         # - there is an existing series, but it already has a patch with this
         #   number in it
-        if not series or Patch.objects.filter(series=series, number=x).count():
+        if not series or Submission.patch_objects.filter(series=series, number=x).count():
             series = Series.objects.create(
                 project=project,
                 date=date,
@@ -1086,7 +1086,7 @@ def parse_mail(mail, list_id=None):
         if not is_comment:
             if not refs == []:
                 try:
-                    Submission.objects.get(name=name, diff__isnull=True, pull_url__isnull=True)
+                    Submission.cover_objects.get(name=name)
                 except Submission.DoesNotExist:
                     # if no match, this is a new cover letter
                     is_cover_letter = True
@@ -1133,7 +1133,7 @@ def parse_mail(mail, list_id=None):
                                  " in project %s!" % (msgid, project.name))
 
             try:
-                cover_letter = Submission.objects.create(
+                cover_letter = Submission.cover_objects.create(
                     msgid=msgid,
                     project=project,
                     name=name[:255],

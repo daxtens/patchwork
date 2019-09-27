@@ -22,7 +22,7 @@ from django.utils.six.moves import xmlrpc_client
 from django.utils.six.moves.xmlrpc_server import SimpleXMLRPCDispatcher
 
 from patchwork.models import Check
-from patchwork.models import Patch
+from patchwork.models import Submission
 from patchwork.models import Person
 from patchwork.models import Project
 from patchwork.models import State
@@ -564,7 +564,7 @@ def patch_list(filt=None):
             # Invalid Project, Person or State given
             return []
 
-    patches = Patch.objects.filter(**dfilter)
+    patches = Submission.patch_objects.filter(**dfilter)
 
     # Only extract the relevant fields. This saves a big db load as we
     # no longer fetch content/headers/etc for potentially every patch
@@ -588,9 +588,9 @@ def patch_get(patch_id):
         dict.
     """
     try:
-        patch = Patch.objects.get(id=patch_id)
+        patch = Submission.patch_objects.get(id=patch_id)
         return patch_to_dict(patch)
-    except Patch.DoesNotExist:
+    except Submission.DoesNotExist:
         return {}
 
 
@@ -608,9 +608,9 @@ def patch_get_by_hash(hash):  # noqa
         dict.
     """
     try:
-        patch = Patch.objects.get(hash=hash)
+        patch = Submission.patch_objects.get(hash=hash)
         return patch_to_dict(patch)
-    except Patch.DoesNotExist:
+    except Submission.DoesNotExist:
         return {}
 
 
@@ -630,10 +630,10 @@ def patch_get_by_project_hash(project, hash):
         if any, else an empty dict.
     """
     try:
-        patch = Patch.objects.get(project__linkname=project,
+        patch = Submission.patch_objects.get(project__linkname=project,
                                   hash=hash)
         return patch_to_dict(patch)
-    except Patch.DoesNotExist:
+    except Submission.DoesNotExist:
         return {}
 
 
@@ -652,9 +652,9 @@ def patch_get_mbox(patch_id):
         else an empty string.
     """
     try:
-        patch = Patch.objects.get(id=patch_id)
+        patch = Submission.patch_objects.get(id=patch_id)
         return patch_to_mbox(patch)
-    except Patch.DoesNotExist:
+    except Submission.DoesNotExist:
         return ''
 
 
@@ -673,9 +673,9 @@ def patch_get_diff(patch_id):
         else an empty string.
     """
     try:
-        patch = Patch.objects.get(id=patch_id)
+        patch = Submission.patch_objects.get(id=patch_id)
         return patch.diff
-    except Patch.DoesNotExist:
+    except Submission.DoesNotExist:
         return ''
 
 
@@ -713,7 +713,7 @@ def patch_set(user, patch_id, params):
     """
     ok_params = ['state', 'commit_ref', 'archived']
 
-    patch = Patch.objects.get(id=patch_id)
+    patch = Submission.patch_objects.get(id=patch_id)
 
     if not patch.is_editable(user):
         raise Exception('No permissions to edit this patch')
@@ -868,7 +868,7 @@ def check_list(filt=None):
             dfilter['patch__project'] = Project.objects.filter(
                 id=filt[key])[0]
         elif parts[0] == 'patch_id':
-            dfilter['patch'] = Patch.objects.filter(id=filt[key])[0]
+            dfilter['patch'] = Submission.patch_objects.filter(id=filt[key])[0]
         elif parts[0] == 'max_count':
             max_count = filt[key]
         else:
@@ -916,7 +916,7 @@ def check_create(user, patch_id, context, state, target_url="",
     Returns:
         True, if successful else raise exception.
     """
-    patch = Patch.objects.get(id=patch_id)
+    patch = Submission.patch_objects.get(id=patch_id)
     if not patch.is_editable(user):
         raise Exception('No permissions to edit this patch')
     for state_val, state_str in Check.STATE_CHOICES:
@@ -945,7 +945,7 @@ def patch_check_get(patch_id):
         else an empty dict.
     """
     try:
-        patch = Patch.objects.get(id=patch_id)
+        patch = Submission.patch_objects.get(id=patch_id)
         return patch_check_to_dict(patch)
-    except Patch.DoesNotExist:
+    except Submission.DoesNotExist:
         return {}

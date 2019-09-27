@@ -19,7 +19,7 @@ from patchwork.api.base import MultipleFieldLookupMixin
 from patchwork.api.embedded import UserSerializer
 from patchwork.api.filters import CheckFilterSet
 from patchwork.models import Check
-from patchwork.models import Patch
+from patchwork.models import Submission
 
 
 class CurrentPatchDefault(object):
@@ -84,7 +84,7 @@ class CheckMixin(object):
     def get_queryset(self):
         patch_id = self.kwargs['patch_id']
 
-        if not Patch.objects.filter(pk=self.kwargs['patch_id']).exists():
+        if not Submission.patch_objects.filter(pk=self.kwargs['patch_id']).exists():
             raise Http404
 
         return Check.objects.prefetch_related('user').filter(patch=patch_id)
@@ -103,7 +103,7 @@ class CheckListCreate(CheckMixin, ListCreateAPIView):
     ordering = 'id'
 
     def create(self, request, patch_id, *args, **kwargs):
-        p = get_object_or_404(Patch, id=patch_id)
+        p = get_object_or_404(Submission, id=patch_id)
         if not p.is_editable(request.user):
             raise PermissionDenied()
         request.patch = p
