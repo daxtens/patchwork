@@ -188,9 +188,6 @@ def create_patch(**kwargs):
     }
     values.update(kwargs)
 
-    if 'patch_project' not in values:
-        values['patch_project'] = values['project']
-
     patch = Patch.objects.create(**values)
 
     if series:

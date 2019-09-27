@@ -453,10 +453,6 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
 @python_2_unicode_compatible
 class Patch(Submission):
 
-    # duplicate project from submission in subclass so we can count the
-    # patches in a project without needing to do a JOIN.
-    patch_project = models.ForeignKey(Project, on_delete=models.CASCADE)
-
     objects = PatchManager()
 
     @staticmethod

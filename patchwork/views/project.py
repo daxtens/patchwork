@@ -36,7 +36,7 @@ def project_detail(request, project_id):
     # TODO MIGRATE CLEANUP
     n_patches = {
         archived: Patch.objects.filter(
-           patch_project_id=project.id, archived=archived).count()
+           project_id=project.id, archived=archived).count()
         for archived in [True, False]
     }
 
