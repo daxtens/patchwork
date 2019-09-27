@@ -56,6 +56,21 @@ class ProjectViewTest(TestCase):
         self.assertEqual(response.context['n_patches'], 1)
         self.assertEqual(response.context['n_archived_patches'], 1)
 
+        utils.create_patch(project=project, archived=True)
+
+        response = self.client.get(requested_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['n_patches'], 1)
+        self.assertEqual(response.context['n_archived_patches'], 2)
+
+        utils.create_patch(project=project)
+
+        response = self.client.get(requested_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['n_patches'], 2)
+        self.assertEqual(response.context['n_archived_patches'], 2)
+
+
     def test_maintainers(self):
         project = utils.create_project()
 
