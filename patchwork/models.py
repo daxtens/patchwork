@@ -420,6 +420,11 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
             # depends on the SQL optimiser of your db engine)
             models.Index(fields=['date', 'project', 'submitter', 'name'],
                          name='submission_covering_idx'),
+
+            # This is a covering index for the /list/ query TODO MIGRATE CLEANUP
+            models.Index(fields=['new_archived', 'project', 'new_state',
+                                 'new_delegate'],
+                         name='submission_patch_covering_idx'),
         ]
 
 
