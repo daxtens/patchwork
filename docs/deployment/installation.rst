@@ -280,15 +280,8 @@ described in :doc:`configuration`.
 * ``NOTIFICATION_FROM_EMAIL``
 
 These are not configurable using environment variables and must be configured
-directly in the ``production.py`` settings file instead. For example, if you
-wish to enable the XML-RPC API, you should add the following:
-
-.. code-block:: python
-
-   ENABLE_XMLRPC = True
-
-Similarly, should you wish to disable the REST API, you should add the
-following:
+directly in the ``production.py`` settings file instead. For example, should
+you wish to disable the REST API, you should add the following:
 
 .. code-block:: python
 
@@ -506,8 +499,7 @@ doing the following:
 
 Once the administrative console is accessible, you would want to configure your
 different sites and their corresponding domain names, which is required for the
-different emails sent by Patchwork (registration, password recovery) as well as
-the sample ``pwclientrc`` files provided by your project's page.
+different emails sent by Patchwork (registration, password recovery).
 
 .. _deployment-parsemail:
 
@@ -644,27 +636,6 @@ services can be more than to get email into Patchwork.
 
 You can also create such as service yourself using a PaaS provider that
 supports incoming mail and writing a little web app.
-
-
-.. _deployment-vcs:
-
-(Optional) Configure your VCS to Automatically Update Patches
--------------------------------------------------------------
-
-The ``tools`` directory of the Patchwork distribution contains a file named
-``post-receive.hook`` which is a sample Git hook that can be used to
-automatically update patches to the *Accepted* state when corresponding commits
-are pushed via Git.
-
-To install this hook, simply copy it to the ``.git/hooks`` directory on your
-server, name it ``post-receive``, and make it executable.
-
-This sample hook has support to update patches to different states depending on
-which branch is being pushed to. See the ``STATE_MAP`` setting in that file.
-
-If you are using a system other than Git, you can likely write a similar hook
-using the :doc:`APIs </api/index>` or :doc:`API clients </usage/clients>` to to
-update patch state. If you do write one, please contribute it.
 
 
 .. _deployment-cron:

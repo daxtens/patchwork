@@ -25,8 +25,8 @@ If all you want is reference guides, skip straight to :ref:`rest-api-schemas`.
 .. versionadded:: 2.0
 
    The REST API was introduced in Patchwork v2.0. Users of earlier Patchwork
-   versions should instead refer to :doc:`XML-RPC API </api/xmlrpc>`
-   documentation.
+   versions should instead refer to XML-RPC API documentation provided with
+   those versions.
 
 .. versionchanged:: 2.1
 

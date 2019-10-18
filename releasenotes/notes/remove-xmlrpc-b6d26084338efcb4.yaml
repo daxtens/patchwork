@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    To simplify the code base, the XML-RPC API has been removed. This
+    means that `pwclient` will no longer work.
+
+    As a result, `tools/patchwork-update-commits` and
+    `tools/post-receive.hook` have also been removed.
+
+    Users are encouraged to try
+    `git-pw <https://github.com/getpatchwork/git-pw>`_.

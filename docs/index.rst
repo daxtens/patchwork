@@ -51,7 +51,6 @@ of community projects.
    :caption: API Documentation
 
    api/rest/index
-   api/xmlrpc
 
 .. toctree::
    :maxdepth: 2

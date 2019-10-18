@@ -128,9 +128,9 @@ Update the hashes on existing patches.
    ./manage.py rehash [<patch_id>, ...]
 
 Patchwork stores hashes for each patch it receives. These hashes can be used to
-uniquely identify a patch for things like :ref:`automatically changing the
-state of the patch in Patchwork when it merges <deployment-vcs>`. If you change
-your hashing algorithm, you may wish to rehash the patches.
+uniquely identify a patch for things like automatically changing the state of
+the patch in Patchwork when it is merged. If you change your hashing algorithm,
+you may wish to rehash the patches.
 
 .. option:: patch_id
 

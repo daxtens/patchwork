@@ -14,7 +14,6 @@ def about(request):
     context = {
         'enabled_apis': {
             'rest': settings.ENABLE_REST_API,
-            'xmlrpc': settings.ENABLE_XMLRPC,
         },
         'admins': () if settings.ADMINS_HIDE else settings.ADMINS,
     }
@@ -23,8 +22,5 @@ def about(request):
 
 
 def redirect(request):
-    """Redirect for legacy URLs.
-
-    Remove this when Patchwork 3.0 is released.
-    """
+    """Redirect for legacy URLs."""
     return HttpResponsePermanentRedirect(reverse('about'))

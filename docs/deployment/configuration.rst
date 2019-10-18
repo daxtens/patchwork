@@ -80,10 +80,6 @@ Enable the :doc:`REST API <../api/rest/index>`.
 
 .. versionadded:: 2.0
 
-``ENABLE_XMLRPC``
-~~~~~~~~~~~~~~~~~
-
-Enable the :doc:`XML-RPC API <../api/xmlrpc>`.
 
 .. TODO(stephenfin) Deprecate this in favor of SECURE_SSL_REDIRECT
 

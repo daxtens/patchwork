@@ -211,9 +211,6 @@ NOTIFICATION_DELAY_MINUTES = 10
 
 NOTIFICATION_FROM_EMAIL = DEFAULT_FROM_EMAIL
 
-# Set to True to enable the Patchwork XML-RPC interface
-ENABLE_XMLRPC = False
-
 # Set to True to enable the Patchwork REST API
 ENABLE_REST_API = True
 

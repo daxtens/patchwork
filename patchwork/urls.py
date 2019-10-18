@@ -18,10 +18,9 @@ from patchwork.views import mail as mail_views
 from patchwork.views import notification as notification_views
 from patchwork.views import patch as patch_views
 from patchwork.views import project as project_views
-from patchwork.views import pwclient as pwclient_views
 from patchwork.views import series as series_views
 from patchwork.views import user as user_views
-from patchwork.views import xmlrpc as xmlrpc_views
+from patchwork.views import removed as removed_views
 
 
 admin.autodiscover()
@@ -163,16 +162,6 @@ if 'debug_toolbar' in settings.INSTALLED_APPS:
         url(r'^__debug__/', include(debug_toolbar.urls)),
     ]
 
-if settings.ENABLE_XMLRPC:
-    urlpatterns += [
-        url(r'xmlrpc/$', xmlrpc_views.xmlrpc, name='xmlrpc'),
-        url(r'^project/(?P<project_id>[^/]+)/pwclientrc/$',
-            pwclient_views.pwclientrc,
-            name='pwclientrc'),
-        # legacy redirect
-        url(r'^help/pwclient/$', about_views.redirect, name='help-pwclient'),
-    ]
-
 if settings.ENABLE_REST_API:
     if 'rest_framework' not in settings.INSTALLED_APPS:
         raise RuntimeError(
@@ -275,4 +264,11 @@ if settings.COMPAT_REDIR:
         url(r'^user/bundle/(?P<bundle_id>[^/]+)/mbox/$',
             bundle_views.bundle_mbox_redir,
             name='bundle-mbox-redir'),
+    ]
+
+    urlpatterns += [
+        url(r'xmlrpc/$', removed_views.xmlrpc_removed),
+        url(r'^project/(?P<project_id>[^/]+)/pwclientrc/$',
+            removed_views.xmlrpc_removed),
+        url(r'^help/pwclient/$', removed_views.xmlrpc_removed),
     ]

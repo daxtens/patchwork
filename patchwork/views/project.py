@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -59,6 +58,5 @@ def project_detail(request, project_id):
             profile__maintainer_projects=project).select_related('profile'),
         'n_patches': n_patches[False] if False in n_patches else 0,
         'n_archived_patches': n_patches[True] if True in n_patches else 0,
-        'enable_xmlrpc': settings.ENABLE_XMLRPC,
     }
     return render(request, 'patchwork/project.html', context)
