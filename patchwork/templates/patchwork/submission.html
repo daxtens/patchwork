@@ -72,43 +72,38 @@ function toggle_div(link_id, headers_id)
  <tr>
   <th>Series</th>
   <td>
-   <a href="{% url 'patch-list' project_id=project.linkname %}?series={{ submission.series.id }}">
-    {{ submission.series }}
-   </a>
-  </td>
- </tr>
- <tr>
-  <th>Related</th>
-  <td>
-   <a id="togglepatchrelations"
-      href="javascript:toggle_div('togglepatchrelations', 'patchrelations')"
-   >show</a>
-   <div id="patchrelations" class="patchrelations" style="display:none;">
+   <a id="togglepatchseries"
+      href="javascript:toggle_div('togglepatchseries', 'patchseries')"
+   >show</a> {{ submission.series.name }}
+   <div id="patchseries" class="submissionlist" style="display:none;">
     <ul>
-    {% with submission.series.cover_letter as cover %}
-     <li>
-     {% if cover %}
-      {% if cover == submission %}
-       {{ cover.name|default:"[no subject]"|truncatechars:100 }}
-      {% else %}
-      <a href="{% url 'cover-detail' project_id=project.linkname msgid=cover.url_msgid %}">
-       {{ cover.name|default:"[no subject]"|truncatechars:100 }}
-      </a>
+     {% with submission.series.cover_letter as cover %}
+      <li>
+      {% if cover %}
+       {% if cover == submission %}
+        {{ cover.name|default:"[no subject]"|truncatechars:100 }}
+       {% else %}
+       <a href="{% url 'cover-detail' project_id=project.linkname msgid=cover.url_msgid %}">
+        {{ cover.name|default:"[no subject]"|truncatechars:100 }}
+       </a>
+       {% endif %}
       {% endif %}
-     {% endif %}
-     </li>
-    {% endwith %}
-    {% for sibling in submission.series.patches.all %}
-     <li>
-      {% if sibling == submission %}
-       {{ sibling.name|default:"[no subject]"|truncatechars:100 }}
-      {% else %}
-      <a href="{% url 'patch-detail' project_id=project.linkname msgid=sibling.url_msgid %}">
-       {{ sibling.name|default:"[no subject]"|truncatechars:100 }}
-      </a>
-      {% endif %}
-     </li>
-    {% endfor %}
+      </li>
+     {% endwith %}
+     {% for sibling in submission.series.patches.all %}
+      <li>
+       {% if sibling == submission %}
+        {{ sibling.name|default:"[no subject]"|truncatechars:100 }}
+       {% else %}
+       <a href="{% url 'patch-detail' project_id=project.linkname msgid=sibling.url_msgid %}">
+        {{ sibling.name|default:"[no subject]"|truncatechars:100 }}
+       </a>
+       {% endif %}
+      </li>
+     {% endfor %}
+     <a href="{% url 'patch-list' project_id=project.linkname %}?series={{ submission.series.id }}">
+     (Detailed view)
+     </a>
     </ul>
    </div>
   </td>
