@@ -187,6 +187,7 @@ if settings.ENABLE_REST_API:
     from patchwork.api import patch as api_patch_views  # noqa
     from patchwork.api import person as api_person_views  # noqa
     from patchwork.api import project as api_project_views  # noqa
+    from patchwork.api import relation as api_relation_views  # noqa
     from patchwork.api import series as api_series_views  # noqa
     from patchwork.api import user as api_user_views  # noqa
 
@@ -256,9 +257,19 @@ if settings.ENABLE_REST_API:
             name='api-cover-comment-list'),
     ]
 
+    api_1_2_patterns = [
+        url(r'^relations/$',
+            api_relation_views.SubmissionRelationList.as_view(),
+            name='api-relation-list'),
+        url(r'^relations/(?P<pk>[^/]+)/$',
+            api_relation_views.SubmissionRelationDetail.as_view(),
+            name='api-relation-detail'),
+    ]
+
     urlpatterns += [
         url(r'^api/(?:(?P<version>(1.0|1.1|1.2))/)?', include(api_patterns)),
         url(r'^api/(?:(?P<version>(1.1|1.2))/)?', include(api_1_1_patterns)),
+        url(r'^api/(?:(?P<version>1.2)/)?', include(api_1_2_patterns)),
 
         # token change
         url(r'^user/generate-token/$', user_views.generate_token,

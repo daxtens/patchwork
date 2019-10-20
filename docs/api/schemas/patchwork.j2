@@ -1037,6 +1037,178 @@ paths:
                 $ref: '#/components/schemas/Error'
       tags:
         - series
+{% if version >= (1, 2) %}
+  /api/{{ version_url }}relations/:
+    get:
+      description: List relations.
+      operationId: relations_list
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/Order'
+      responses:
+        '200':
+          description: ''
+          headers:
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Relation'
+      tags:
+        - relations
+    post:
+      description: Create a relation.
+      operationId: relations_create
+      security:
+        - basicAuth: []
+        - apiKeyAuth: []
+      requestBody:
+        $ref: '#/components/requestBodies/Relation'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relation'
+        '400':
+          description: Invalid Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRelation'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - checks
+  /api/{{ version_url }}relations/{id}/:
+    get:
+      description: Show a relation.
+      operationId: relation_read
+      parameters:
+        - in: path
+          name: id
+          description: A unique integer value identifying this relation.
+          required: true
+          schema:
+            title: ID
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relation'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - relations
+    patch:
+      description: Update a relation (partial).
+      operationId: relations_partial_update
+      security:
+        - basicAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: A unique integer value identifying this relation.
+          required: true
+          schema:
+            title: ID
+            type: integer
+      requestBody:
+        $ref: '#/components/requestBodies/Relation'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relation'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRelation'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - relations
+    put:
+      description: Update a relation.
+      operationId: relations_update
+      security:
+        - basicAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - in: path
+          name: id
+          description: A unique integer value identifying this relation.
+          required: true
+          schema:
+            title: ID
+            type: integer
+      requestBody:
+        $ref: '#/components/requestBodies/Relation'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relation'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRelation'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - relations
+{% endif %}
   /api/{{ version_url }}users/:
     get:
       description: List users.
@@ -1314,6 +1486,20 @@ components:
         application/x-www-form-urlencoded:
           schema:
             $ref: '#/components/schemas/User'
+{% if version >= (1, 2) %}
+    Relation:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RelationUpdate'
+        multipart/form-data:
+          schema:
+            $ref: '#/components/schemas/RelationUpdate'
+        application/x-www-form-urlencoded:
+          schema:
+            $ref: '#/components/schemas/RelationUpdate'
+{% endif %}
   schemas:
     Index:
       type: object
@@ -1358,6 +1544,13 @@ components:
           type: string
           format: uri
           readOnly: true
+{% if version >= (1, 2) %}
+        relations:
+          title: Relations URL
+          type: string
+          format: uri
+          readOnly: true
+{% endif %}
     Bundle:
       required:
         - name
@@ -1961,6 +2154,16 @@ components:
           title: Delegate
           type: integer
           nullable: true
+{% if version >= (1, 2) %}
+    RelationUpdate:
+      type: object
+      properties:
+        submissions:
+          title: Submission IDs
+          type: array
+          items:
+            type: integer
+{% endif %}
     Person:
       type: object
       properties:
@@ -2157,6 +2360,24 @@ components:
             $ref: '#/components/schemas/PatchEmbedded'
           readOnly: true
           uniqueItems: true
+{% if version >= (1, 2) %}
+    Relation:
+      type: object
+      properties:
+        id:
+          title: ID
+          type: integer
+        url:
+          title: URL
+          type: string
+          format: uri
+          readOnly: true
+        submissions:
+          type: array
+          items:
+            type: integer
+          uniqueItems: true
+{% endif %}
     User:
       type: object
       properties:
@@ -2582,6 +2803,15 @@ components:
           type: string
           format: uri
           readOnly: true
+{% if version >= (1, 2) %}
+    ErrorRelation:
+      type: object
+      properties:
+        submissions:
+          type: array
+          items:
+            type: string
+{% endif %}
     ErrorUserUpdate:
       type: object
       properties:

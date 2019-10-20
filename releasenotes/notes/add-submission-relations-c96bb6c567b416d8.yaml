@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Submissions (cover letters or patches) can now be related to other ones
+    (e.g. revisions). Relations can be set via the REST API by maintainers
+    (currently only for submissions of projects they maintain)
+api:
+  - |
+    Relations are available via ``/relations/`` and
+    ``/relations/{relationID}/`` endpoints.

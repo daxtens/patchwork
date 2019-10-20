@@ -21,4 +21,5 @@ class IndexView(APIView):
             'series': reverse('api-series-list', request=request),
             'events': reverse('api-event-list', request=request),
             'bundles': reverse('api-bundle-list', request=request),
+            'relations': reverse('api-relation-list', request=request),
         })
