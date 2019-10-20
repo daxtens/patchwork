@@ -374,6 +374,9 @@ class Submission(FilenameMixin, EmailMixin, models.Model):
     # submission metadata
 
     name = models.CharField(max_length=255)
+    related = models.ForeignKey(
+        'SubmissionRelation', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='submissions', related_query_name='submission')
 
     @property
     def list_archive_url(self):
@@ -857,6 +860,12 @@ class BundlePatch(models.Model):
     class Meta:
         unique_together = [('bundle', 'patch')]
         ordering = ['order']
+
+
+class SubmissionRelation(models.Model):
+
+    def __str__(self):
+        return ', '.join(s.name for s in self.submissions.all()) or '<Empty>'
 
 
 @python_2_unicode_compatible

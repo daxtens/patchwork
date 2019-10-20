@@ -110,12 +110,19 @@ def patch_detail(request, project_id, msgid):
     comments = comments.only('submitter', 'date', 'id', 'content',
                              'submission')
 
+    if patch.related:
+        related_outside = patch.related.submissions \
+            .exclude(project=patch.project)
+    else:
+        related_outside = []
+
     context['comments'] = comments
     context['checks'] = patch.check_set.all().select_related('user')
     context['submission'] = patch
     context['patchform'] = form
     context['createbundleform'] = createbundleform
     context['project'] = patch.project
+    context['related_outside'] = related_outside
 
     return render(request, 'patchwork/submission.html', context)
 
